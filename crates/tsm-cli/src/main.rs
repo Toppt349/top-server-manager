@@ -20,8 +20,29 @@ fn usage() -> ! {
     std::process::exit(2)
 }
 
-#[tokio::main]
-async fn main() {
+/// The engine's start pipeline is one large async state machine. In debug
+/// builds it does not fit in the 1 MB main-thread stack Windows gives a
+/// process, so the CLI runs on a thread (and runtime workers) with more room.
+fn main() {
+    const STACK: usize = 32 * 1024 * 1024;
+    let worker = std::thread::Builder::new()
+        .name("tsm-cli".into())
+        .stack_size(STACK)
+        .spawn(|| {
+            tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .thread_stack_size(STACK)
+                .build()
+                .expect("tokio runtime")
+                .block_on(cli_main())
+        })
+        .expect("spawn cli thread");
+    let _ = worker.join();
+    // cli_main always exits the process itself; reaching here means it panicked.
+    std::process::exit(101);
+}
+
+async fn cli_main() {
     #[cfg(windows)]
     tsm_core::winapi::std_handles_not_inheritable();
     let mut args: Vec<String> = std::env::args().skip(1).collect();
