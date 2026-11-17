@@ -70,9 +70,10 @@ async fn add_from_folder_detects_kind_database_and_missing_runtimes() {
     // adding the same folder twice is refused
     assert!(e.inspect_folder(&php).already_added.is_some());
     assert!(e.create_from_folder(php.clone(), None).is_err());
-    // runtimes are not installed in this test root
+    // runtimes are not installed in this test root. PHP may still be found on
+    // the system PATH (GitHub's Windows runners ship it), so it is not asserted.
     let miss: Vec<String> = e.missing_runtimes(&p.id).unwrap().into_iter().map(|m| m.id).collect();
-    assert!(miss.contains(&"php".to_string()) && miss.contains(&"mariadb".to_string()), "{miss:?}");
+    assert!(miss.contains(&"caddy".to_string()) && miss.contains(&"mariadb".to_string()), "{miss:?}");
 
     // Minecraft Java
     let mc = base.path().join("Survival");

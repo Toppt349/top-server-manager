@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.2
+
+### English
+- **Fixed: the Thai installer showed empty options and an empty warning box.** Tauri ships no Thai text for its own installer messages, such as "already installed – what do you want to do?", "the app is running, press OK to close it", the uninstall options and the WebView2 messages. All 28 messages are now translated.
+- Automated build: one test assumed PHP is not installed on the machine, which failed on GitHub's Windows runners where PHP is preinstalled.
+
+### ภาษาไทย
+- **แก้: ตัวติดตั้งภาษาไทยมีตัวเลือกว่างและกล่องเตือนว่าง** เพราะ Tauri ไม่มีคำแปลไทยของข้อความตัวติดตั้ง เช่น "ติดตั้งไว้แล้ว จะทำอะไรต่อ", "โปรแกรมกำลังเปิดอยู่ กด OK เพื่อปิด", ตัวเลือกถอนการติดตั้ง และข้อความ WebView2 ตอนนี้แปลครบทั้ง 28 ข้อความแล้ว
+- ระบบ build อัตโนมัติ: แก้เทสต์ที่คาดว่าเครื่องไม่มี PHP ซึ่งไม่ผ่านบนเครื่องของ GitHub ที่มี PHP ติดตั้งมาอยู่แล้ว
+
 ## 2.0.1
 
 ### English
