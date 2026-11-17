@@ -1,0 +1,59 @@
+[package]
+name = "tsm-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "TOP Server Manager core engine: projects, process supervision, runtimes, databases and hosting providers (UI independent)."
+
+[lib]
+name = "tsm_core"
+path = "src/lib.rs"
+
+# Small helper server used only by the automated tests (never shipped in the installer).
+[[bin]]
+name = "tsm-testserver"
+path = "src/bin/testserver.rs"
+test = false
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+async-trait = "0.1"
+rusqlite = { version = "0.43", features = ["bundled"] }
+# PostgreSQL wire protocol (SCRAM auth); local connections only, so no TLS.
+tokio-postgres = "0.7"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+sha2 = "0.10"
+sha1 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+zip = { version = "9", default-features = false, features = ["deflate"] }
+regex = "1"
+mail-parser = "0.11"
+sysinfo = "0.35"
+igd-next = { version = "0.15", features = ["aio_tokio"] }
+dirs = "6"
+rand = "0.8"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Security_Cryptography",
+  "Win32_Security_WinTrust",
+  "Win32_System_JobObjects",
+  "Win32_System_Console",
+  "Win32_System_Threading",
+  "Win32_System_Memory",
+  "Win32_System_Registry",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[dev-dependencies]
+tempfile = "3"

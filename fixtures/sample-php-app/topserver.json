@@ -1,0 +1,14 @@
+{
+  "name": "Sample Scoreboard",
+  "type": "php",
+  "web_root": "public",
+  "port": 8010,
+  "health": { "path": "/health.php" },
+  "database": {
+    "driver": "sqlite",
+    "name": "scoreboard",
+    "migrations": "database/migrations",
+    "config_adapter": "env",
+    "env": { "SCOREBOARD_DB": "{database_path}" }
+  }
+}

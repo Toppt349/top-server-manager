@@ -1,0 +1,30 @@
+# build output
+/target
+/node_modules
+/dist-ui
+/dist
+/src-tauri/gen
+
+# local tools and editor settings
+/.claude
+/.vscode
+/.idea
+*.code-workspace
+
+# secrets and local config (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+
+# runtime leftovers
+*.log
+*.db.lock
+*.sqlite
+*.sqlite-journal
+Thumbs.db
+desktop.ini
+.DS_Store

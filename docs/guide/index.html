@@ -1,0 +1,497 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มือ TOP Server Manager</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
+<style>
+/* Layout: sticky table of contents on the left, one section per app page; each screenshot carries numbered pins that match the list beside it. All text lives in the script below in Thai and English; the TH / EN switch re-renders the page. */
+:root {
+  --bg: #f5f6fa; --surface: #ffffff; --surface-2: #eef0f7; --fg: #1b1e2c; --muted: #5d6378; --line: #dde1ec;
+  --accent: #5145e5; --accent-soft: #e9e7ff; --pin-ring: #ffffff; --ok: #12805c; --warn: #9a5b00; --warn-soft: #fff4e0; --tip-soft: #e7f6ef;
+  --font-body: "IBM Plex Sans Thai", "Leelawadee UI", "Segoe UI", "Tahoma", system-ui, sans-serif;
+  --font-head: "Kanit", "IBM Plex Sans Thai", "Leelawadee UI", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1120; --surface: #161a2c; --surface-2: #1d2238; --fg: #e8eaf4; --muted: #9aa1bd; --line: #2a3050;
+  --accent: #8b83ff; --accent-soft: #262457; --pin-ring: #0e1120; --ok: #4ed6a0; --warn: #ffbf5c; --warn-soft: #33270f; --tip-soft: #10291f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1120; --surface: #161a2c; --surface-2: #1d2238; --fg: #e8eaf4; --muted: #9aa1bd; --line: #2a3050;
+  --accent: #8b83ff; --accent-soft: #262457; --pin-ring: #0e1120; --ok: #4ed6a0; --warn: #ffbf5c; --warn-soft: #33270f; --tip-soft: #10291f; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.75; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 32px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 40px; }
+h1, h2, h3 { font-family: var(--font-head); font-weight: 600; line-height: 1.3; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.1rem; }
+h2 { font-size: 1.55rem; }
+h3 { font-size: 1.1rem; margin-top: 18px; }
+p { margin: 8px 0; }
+a { color: var(--accent); }
+kbd, .k { font-family: var(--font-body); font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 0 7px; overflow-wrap: anywhere; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+code { font-family: Consolas, "Cascadia Mono", monospace; font-size: .92em; background: var(--surface-2); padding: 1px 6px; border-radius: 5px; overflow-wrap: anywhere; }
+
+nav.toc { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: .93rem; }
+nav.toc .label { font-size: .75rem; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+nav.toc a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--accent-soft); color: var(--accent); outline: none; }
+nav.toc .grp { margin-top: 14px; }
+
+/* language switch */
+.lang { display: inline-flex; gap: 2px; padding: 3px; margin-bottom: 18px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.lang button { font: 600 .88rem var(--font-body); color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 4px 14px; cursor: pointer; min-height: 32px; }
+.lang button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.lang button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main { min-width: 0; }
+header.hero { padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+header.hero p { color: var(--muted); max-width: 70ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { font-size: .82rem; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; color: var(--muted); }
+
+section.pg { padding-top: 40px; scroll-margin-top: 12px; }
+section.pg > p.lead { color: var(--muted); max-width: 72ch; }
+.where { font-size: .9rem; color: var(--muted); }
+.where b { color: var(--fg); }
+
+.shot { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+.shot ol.legend { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.frame img { cursor: zoom-in; }
+.zoomer { position: fixed; inset: 0; z-index: 50; background: rgba(6, 8, 18, .88); display: grid; place-items: center; padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); cursor: zoom-out; }
+.zoomer .frame { width: min(96vw, calc((100vh - 70px) * 1.6)); box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.zoomer .frame img { cursor: zoom-out; }
+.zoomer .pin { width: 32px; height: 32px; line-height: 32px; font-size: 15px; }
+.zoomer .hint { color: #e8eaf4; font-size: .9rem; margin-top: 10px; text-align: center; }
+figure { margin: 0; min-width: 0; }
+.frame { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0d1020; box-shadow: 0 10px 30px -18px rgba(20, 20, 60, .5); }
+.frame img { display: block; width: 100%; height: auto; }
+figcaption { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.pin { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font: 600 13px/26px var(--font-body); text-align: center; box-shadow: 0 0 0 3px var(--pin-ring), 0 3px 10px rgba(0,0,0,.4); cursor: pointer; border: 0; padding: 0; transition: transform .15s; }
+.pin.on, .pin:hover, .pin:focus-visible { transform: translate(-50%, -50%) scale(1.25); outline: none; }
+
+ol.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: n; }
+ol.legend li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); cursor: default; }
+ol.legend li.on { border-color: var(--accent); background: var(--accent-soft); }
+ol.legend li .n { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; font-size: 13px; text-align: center; line-height: 26px; }
+ol.legend li b { display: block; }
+ol.legend li span.d { color: var(--muted); font-size: .92rem; }
+
+.howto { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+.howto h3 { margin: 0 0 6px; }
+.howto ol { margin: 0; padding-left: 1.4em; }
+.howto ol li { margin: 3px 0; }
+.note { margin-top: 12px; border-radius: 10px; padding: 10px 14px; font-size: .95rem; }
+.note.tip { background: var(--tip-soft); }
+.note.warn { background: var(--warn-soft); }
+.note b:first-child { margin-right: 4px; }
+
+.quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 14px; }
+.quick .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.quick .card b { font-family: var(--font-head); font-weight: 500; font-size: 1.05rem; display: block; margin-bottom: 4px; }
+.quick .card ol { margin: 0; padding-left: 1.2em; font-size: .94rem; }
+
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-top: 8px; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq details[open] summary { margin-bottom: 6px; }
+
+@media (max-width: 980px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  nav.toc { position: static; max-height: none; display: flex; flex-wrap: wrap; gap: 4px; }
+  nav.toc .label, nav.toc .grp, nav.toc .lang-row { width: 100%; margin-top: 4px; }
+  .shot { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) { h1 { font-size: 1.6rem; } .pin { width: 20px; height: 20px; line-height: 20px; font-size: 11px; } }
+@media (prefers-reduced-motion: reduce) { .pin { transition: none; } }
+</style>
+
+<div class="wrap">
+  <nav class="toc" id="toc"></nav>
+  <main>
+    <header class="hero" id="hero"></header>
+    <section class="pg" id="start"></section>
+    <div id="pages"></div>
+    <section class="pg faq" id="faq"></section>
+  </main>
+</div>
+
+<script>
+// Every text is a pair [Thai, English]. Pins: [x%, y%, titleTH, textTH, titleEN, textEN, optional [x%, y%] for the English screenshot].
+const UI = {
+  docTitle: ["คู่มือ TOP Server Manager", "TOP Server Manager guide"],
+  toc: ["สารบัญ", "Contents"],
+  langLabel: ["ภาษา", "Language"],
+  heroText: ["อธิบายทุกหน้าในโปรแกรม พร้อมภาพที่มีตัวเลขชี้แต่ละปุ่ม กดตัวเลขบนภาพ (หรือชี้ที่รายการด้านขวา) เพื่อดูว่าปุ่มนั้นทำอะไร",
+             "Every page of the app, with numbered pins on each screenshot. Press a number on the picture (or point at the list beside it) to see what that button does."],
+  version: ["เวอร์ชัน 2.0", "Version 2.0"],
+  demo: ["ภาพใช้ข้อมูลสาธิต — ชื่อเว็บและตัวเลขในเครื่องคุณจะต่างไป", "Screenshots use demo data – your site names and numbers will differ"],
+  start: ["เริ่มใช้งานเร็ว", "Quick start"],
+  startLead: ["งานที่ทำบ่อยที่สุด ทำตามทีละข้อได้เลย", "The most common tasks, step by step."],
+  other: ["อื่น ๆ", "More"],
+  faq: ["ปัญหาที่พบบ่อย", "Common problems"],
+  goTo: ["ไปที่", "Go to"],
+  shotAlt: ["ภาพหน้าจอ", "Screenshot:"],
+  caption: ["ภาพตัวอย่างจากข้อมูลสาธิต · กดที่ภาพเพื่อขยายเต็มจอ · กดตัวเลขเพื่อดูคำอธิบาย", "Demo data · press the picture to enlarge it · press a number for its description"],
+  warn: ["ข้อควรรู้:", "Good to know:"],
+  tip: ["เคล็ดลับ:", "Tip:"],
+  zoom: ["ภาพขยาย", "Enlarged screenshot"],
+  zoomHint: ["ชี้ที่ตัวเลขเพื่อดูชื่อปุ่ม · กดที่ใดก็ได้หรือ Esc เพื่อปิด", "Point at a number to see the button name · press anywhere or Esc to close"],
+};
+
+const k = (s) => `<span class='k'>${s}</span>`;
+
+const QUICK = [
+  { t: ["เปิดเว็บที่มีอยู่แล้ว", "Run a site you already have"], s: [
+    [`เมนู ${k("เพิ่มเซิร์ฟเวอร์")}`, `Menu ${k("Add Server")}`],
+    [`กด ${k("เลือกโฟลเดอร์")} ที่มีเว็บ`, `Press ${k("Browse")} and pick the site folder`],
+    [`กด ${k("เพิ่มและเริ่มเลย")}`, `Press ${k("Add and start")}`],
+    [`ถ้าขาดโปรแกรม กด ${k("ติดตั้งให้เลย")}`, `If something is missing, press ${k("Install and start")}`] ] },
+  { t: ["ให้คนอื่นเข้าเว็บได้", "Let other people open your site"], s: [
+    [`เมนู ${k("โฮสต์ / เครือข่าย")}`, `Menu ${k("Hosting / Network")}`],
+    ["เลือกเว็บที่มุมขวาบน", "Pick the site at the top right"],
+    [`เลือก ${k("ลิงก์ชั่วคราว")} หรือ ${k("โดเมนของฉัน")}`, `Choose ${k("Temporary link")} or ${k("My domain")}`],
+    [`ติ๊กยอมรับ แล้วกด ${k("เปิดเลย")}`, `Tick the confirmation, then press ${k("Go")}`] ] },
+  { t: ["ดู / แก้ข้อมูลในฐานข้อมูล", "View or edit database data"], s: [
+    [`เมนู ${k("ฐานข้อมูล")}`, `Menu ${k("Database Manager")}`],
+    ["เลือกตาราง ดับเบิลคลิกช่องที่จะแก้", "Pick a table and double-click the cell to edit"],
+    [`หรือกด ${k("phpMyAdmin")}`, `Or press ${k("phpMyAdmin")}`] ] },
+  { t: ["ย้ายมาจาก XAMPP", "Move from XAMPP"], s: [
+    [`เมนู ${k("เพิ่มเซิร์ฟเวอร์")}`, `Menu ${k("Add Server")}`],
+    [`การ์ด ${k("ย้ายเว็บมาจาก XAMPP")} → ค้นหา`, `Card ${k("Move sites from XAMPP / Laragon")} → Find`],
+    [`ติ๊กเว็บ → ${k("เพิ่ม N เว็บที่เลือก")}`, `Tick the sites → ${k("Add N selected sites")}`],
+    [`กด ${k("ย้ายข้อมูลจาก MySQL")}`, `Press ${k("Move data from XAMPP MySQL")}`] ] },
+];
+
+const FAQ = [
+  [["กดเริ่มแล้วขึ้นว่า “พอร์ตถูกใช้อยู่”", `มีโปรแกรมอื่นใช้พอร์ตนั้น (เช่น Apache ของ XAMPP) กดปุ่ม ${k("ใช้พอร์ต … แทน แล้วเริ่มเลย")} ในหน้าต่างที่ขึ้นมา หรือปิดโปรแกรมนั้นก่อน ถ้าเว็บผูกกับโดเมนใน Cloudflare อยู่ หน้าโฮสต์จะเตือนและมีปุ่มแก้ให้`],
+   ["“Port is already in use” when I press Start", `Another program uses that port (for example XAMPP's Apache). Press ${k("Use port … and start")} in the window that appears, or close that program first. If the site is linked to a Cloudflare hostname, the Hosting page warns you and offers a fix button.`]],
+  [["เปิดเว็บแล้วขึ้น “เชื่อมต่อฐานข้อมูลไม่ได้”", `ไปที่ ${k("ฐานข้อมูล")} → แท็บภาพรวม → กด ${k("ทดสอบการเชื่อมต่อ")} ถ้าเว็บย้ายมาจาก XAMPP ให้กด ${k("ย้ายข้อมูลจาก MySQL ของ XAMPP")} หรือ ${k("นำเข้า SQL")} จากไฟล์ .sql ของคุณ`],
+   ["The site says it cannot connect to the database", `Open ${k("Database Manager")} → Overview tab → ${k("Test connection")}. If the site came from XAMPP, press ${k("Move data from XAMPP MySQL")} or ${k("Import SQL")} with your .sql file.`]],
+  [["ลิงก์ Cloudflare ขึ้น 502 Bad Gateway", `พอร์ตที่ตั้งใน Cloudflare ไม่ตรงกับพอร์ตของเว็บ หน้า ${k("โฮสต์ / เครือข่าย")} จะขึ้นป้าย “พอร์ตไม่ตรง” ให้กด ${k("แก้ให้ตรง")}`],
+   ["The Cloudflare link shows 502 Bad Gateway", `The port set in Cloudflare does not match the site's port. ${k("Hosting / Network")} shows a “Port mismatch” badge – press ${k("Fix")}.`]],
+  [["Minecraft เปิดแล้วปิดเองทันที", "ครั้งแรกต้องยอมรับ EULA เอง: เปิดไฟล์ <code>eula.txt</code> ในโฟลเดอร์เซิร์ฟเวอร์ เปลี่ยน <code>eula=false</code> เป็น <code>eula=true</code> แล้วกดเริ่มใหม่ ถ้าขึ้นเรื่อง Java โปรแกรมจะเสนอติดตั้ง Java รุ่นล่าสุดให้"],
+   ["Minecraft starts and stops straight away", "The first time, you must accept the EULA yourself: open <code>eula.txt</code> in the server folder, change <code>eula=false</code> to <code>eula=true</code> and start again. If Java is the problem, the app offers to install the latest Java."]],
+  [["https://ชื่อ.test ขึ้นว่าไม่ปลอดภัย", `ยังไม่ได้ติดตั้งใบรับรอง: หน้าเซิร์ฟเวอร์ → การ์ดชื่อเว็บในเครื่อง → ${k("ติดตั้งใบรับรอง")} → กด Yes แล้วปิด-เปิดเบราว์เซอร์ใหม่ (Firefox ต้องเปิด <code>security.enterprise_roots.enabled</code>)`],
+   ["https://name.test says “not secure”", `The certificate is not installed yet: server page → Local name card → ${k("Install certificate")} → Yes, then restart the browser (Firefox needs <code>security.enterprise_roots.enabled</code>).`]],
+  [["Windows เตือน SmartScreen ตอนติดตั้ง", `ตัวติดตั้งยังไม่มีลายเซ็นดิจิทัล กด ${k("More info")} → ${k("Run anyway")}`],
+   ["Windows SmartScreen warns during install", `The installer is not code-signed yet. Press ${k("More info")} → ${k("Run anyway")}.`]],
+  [["ปิดหน้าต่างโปรแกรมแล้วเว็บยังทำงานไหม", `ทำงานต่อ โปรแกรมย่อไปอยู่ที่ไอคอนข้างนาฬิกา (ถาด) และยังดูแลเว็บอยู่ ถ้าต้องการปิดจริงให้คลิกขวาที่ไอคอน หรือเปลี่ยนได้ที่ ${k("ตั้งค่า → เมื่อกดปิดหน้าต่าง")}`],
+   ["Do my sites keep running when I close the window?", `Yes. The app goes to the tray icon next to the clock and keeps supervising them. To quit, right-click the icon, or change it in ${k("Settings → When I close the window")}.`]],
+];
+
+const PAGES = [
+  { id: "dashboard", group: ["ภาพรวม", "Overview"], title: ["แดชบอร์ด", "Dashboard"], menu: ["แดชบอร์ด", "Dashboard"], img: "01-dashboard",
+    lead: ["หน้าแรกเมื่อเปิดโปรแกรม ดูภาพรวมทั้งหมดในที่เดียว: มีกี่เว็บ ทำงานอยู่กี่ตัว เครื่องทำงานหนักแค่ไหน",
+           "The first page you see: how many sites you have, how many are running and how busy the PC is."],
+    pins: [
+      [8.5, 34, "เมนูหลัก", "กดเพื่อไปแต่ละหน้า ตัวเลข 1/3 หมายถึงทำงานอยู่ 1 จาก 3 เซิร์ฟเวอร์", "Main menu", "Go to each page. 1/3 means 1 of 3 servers is running"],
+      [30, 25.5, "ตัวเลขสรุป", "จำนวนเซิร์ฟเวอร์ · กำลังทำงาน · ออนไลน์สาธารณะ · ผู้เล่นออนไลน์ (เกม)", "Summary", "Servers · running · public online · players online (games)"],
+      [59, 43, "กราฟเครื่อง", "CPU · หน่วยความจำ · เครือข่าย ของทั้งเครื่อง อัปเดตทุกไม่กี่วินาที", "PC graphs", "CPU · memory · network for the whole PC, updated every few seconds"],
+      [37.5, 69, "เซิร์ฟเวอร์ของฉัน", "กดที่ชื่อเพื่อเปิดหน้ารายละเอียด · ป้ายสีบอกสถานะและการเปิดออนไลน์", "My Servers", "Press a name to open its details · the badges show status and public access"],
+      [77.5, 76, "บันทึกล่าสุด", "ข้อความล่าสุดจากทุกเซิร์ฟเวอร์ สีแดง = ผิดพลาด สีเหลือง = เตือน", "Recent Logs", "Latest lines from every server. Red = error, yellow = warning"],
+      [92, 13, "เพิ่มเซิร์ฟเวอร์", "ทางลัดไปหน้าเพิ่มเว็บ / เกม", "Add Server", "Shortcut to add a site or game"],
+    ] },
+  { id: "servers", group: ["ภาพรวม", "Overview"], title: ["เซิร์ฟเวอร์ของฉัน", "My Servers"], menu: ["เซิร์ฟเวอร์ของฉัน", "My Servers"], img: "02-servers",
+    lead: ["รายการเว็บและเกมทั้งหมดเป็นการ์ด เปิด / ปิด / รีสตาร์ทได้จากตรงนี้เลย กดที่การ์ดเพื่อเข้าหน้ารายละเอียด",
+           "All your sites and games as cards. Start, stop or restart them here; press a card to open its details."],
+    pins: [
+      [40.5, 23, "สถานะ", "ทำงานอยู่ (เขียว) · หยุดอยู่ (เทา) · ผิดพลาด (แดง) · กำลังเริ่ม (เหลือง)", "Status", "Running (green) · stopped (grey) · error (red) · starting (yellow)"],
+      [27, 28, "ที่อยู่ในเครื่อง", "เปิดได้เฉพาะเครื่องนี้ เช่น http://127.0.0.1:8001", "Local address", "Works on this PC only, e.g. http://127.0.0.1:8001"],
+      [32.5, 31.3, "ลิงก์ออนไลน์", "ลิงก์ที่คนอื่นเข้าได้ (ถ้าเปิดไว้) สีเขียว = ตรวจแล้วว่าเข้าได้จริง", "Public link", "The link other people can open (if shared). Green = verified to work"],
+      [23.5, 39.5, "เปิดเองเมื่อเปิดเครื่อง", "เปิดสวิตช์นี้ เว็บจะเริ่มเองทุกครั้งที่เปิดคอม", "Start with Windows", "Turn this on and the site starts every time the PC starts"],
+      [24.5, 44, "เริ่ม / หยุด / รีสตาร์ท / เปิดเว็บ", "ปุ่ม ▶ เริ่ม · ■ หยุด · ⟳ รีสตาร์ท · ↗ เปิดเว็บในเบราว์เซอร์", "Start / stop / restart / open", "▶ start · ■ stop · ⟳ restart · ↗ open the site in your browser"],
+      [88, 13, "นำเข้า / เพิ่ม", "นำเข้าโปรไฟล์ที่ส่งออกจากเครื่องอื่น หรือเพิ่มเซิร์ฟเวอร์ใหม่", "Import / Add", "Import a profile exported on another PC, or add a new server"],
+    ] },
+  { id: "add", group: ["เพิ่มเว็บ / เกม", "Add a site or game"], title: ["เพิ่มเซิร์ฟเวอร์", "Add Server"], menu: ["เพิ่มเซิร์ฟเวอร์", "Add Server"], img: "03-add",
+    lead: ["มี 4 วิธีเพิ่มเว็บหรือเกม เลือกวิธีที่ตรงกับสิ่งที่คุณมี", "Four ways to add a site or game – pick the one that matches what you have."],
+    pins: [
+      [90.5, 30, "เพิ่มจากโฟลเดอร์ (แนะนำ)", "เลือกโฟลเดอร์ที่มีเว็บ / เกมอยู่แล้ว โปรแกรมดูให้เองว่าเป็นอะไร ใช้ฐานข้อมูลแบบไหน แล้วกด “เพิ่มและเริ่มเลย”", "Add from a folder (recommended)", "Pick a folder that already holds a site or game. The app detects its type and database – then press “Add and start”"],
+      [39, 46.5, "ติดตั้งแอปใหม่ในคลิกเดียว", "เลือก WordPress หรือ Laravel", "New app in one click", "Choose WordPress or Laravel"],
+      [40, 59.5, "ชื่อเว็บ + โฟลเดอร์ใหม่", "โฟลเดอร์ต้องว่างหรือยังไม่มี (โปรแกรมไม่เขียนทับไฟล์ของคุณ)", "Site name + new folder", "The folder must be empty or new (the app never overwrites your files)"],
+      [87, 70, "ติดตั้งแล้วเริ่มเลย", "ดาวน์โหลด ติดตั้ง สร้างฐานข้อมูล แล้วเปิดเว็บให้ — WordPress จะให้เลือกภาษาไทยและตั้งบัญชีผู้ดูแลเอง", "Install and start", "Downloads, installs, creates the database and opens the site – WordPress then asks for your language and admin account"],
+      [30.5, 88.5, "ย้ายมาจาก XAMPP / Laragon", "ค้นหาเว็บใน htdocs / www แล้วเพิ่มทีเดียวหลายเว็บ พร้อมย้ายข้อมูล MySQL", "Move from XAMPP / Laragon", "Finds the sites in htdocs / www and adds them in one go, MySQL data included"],
+      [32.5, 97.5, "สร้างจากเทมเพลต", "เริ่มโปรเจกต์ใหม่ในโฟลเดอร์ว่าง (Minecraft, Node.js, เว็บ HTML ฯลฯ)", "Start from a template", "A new project in an empty folder (Minecraft, Node.js, plain HTML, …)"],
+    ],
+    howto: { t: ["ย้ายเว็บจาก XAMPP ทีละขั้น", "Moving a site from XAMPP, step by step"], s: [
+      [`กด ${k("ค้นหา XAMPP / Laragon ในเครื่อง")} (ถ้าติดตั้งไว้ที่อื่น กด ${k("เลือกโฟลเดอร์ htdocs เอง")})`, `Press ${k("Find XAMPP / Laragon")} (installed somewhere else? press ${k("Choose a htdocs folder")})`],
+      [`ติ๊กเว็บที่ต้องการ แล้วกด ${k("เพิ่ม N เว็บที่เลือก")} — ไฟล์เว็บอยู่ที่เดิม ไม่ถูกย้าย`, `Tick the sites and press ${k("Add N selected sites")} – the files stay where they are`],
+      ["เปิด XAMPP Control Panel แล้วกด Start ที่ MySQL", "Open the XAMPP Control Panel and press Start next to MySQL"],
+      [`กลับมากด ${k("ย้ายข้อมูลจาก MySQL ของ XAMPP")} ที่แต่ละเว็บ`, `Back in the app, press ${k("Move data from XAMPP MySQL")} for each site`],
+      [`ปิด Apache / MySQL ของ XAMPP แล้วกด ${k("เริ่ม")} ที่เว็บในโปรแกรมนี้`, `Stop XAMPP's Apache / MySQL, then press ${k("Start")} on the site in this app`],
+    ] } },
+  { id: "detail", group: ["จัดการเว็บ", "Managing a site"], title: ["หน้ารายละเอียดเซิร์ฟเวอร์", "Server details"], menu: ["เซิร์ฟเวอร์ของฉัน → กดที่การ์ด", "My Servers → press a card"], img: "04-detail",
+    lead: ["ศูนย์รวมทุกอย่างของเว็บนั้น มี 3 แท็บ: ภาพรวม · คอนโซล · แก้ไขการตั้งค่า", "Everything about one site, in three tabs: Overview · Console · Edit Configuration."],
+    pins: [
+      [25, 20.2, "แท็บ", "ภาพรวม (หน้านี้) · คอนโซล (ข้อความจากเว็บแบบเต็มจอ) · แก้ไขการตั้งค่า", "Tabs", "Overview (this page) · Console (full-screen output) · Edit Configuration"],
+      [79, 13, "หยุด / รีสตาร์ท / เปิดเว็บ", "ปุ่มควบคุมหลัก", "Stop / Restart / Open Website", "The main controls"],
+      [95.5, 13, "บังคับหยุด", "ใช้เมื่อเว็บค้าง หยุดแบบปกติไม่ได้", "Force stop", "For when the site hangs and a normal stop does not work"],
+      [39, 34, "กล่องสถานะ", "บอกว่าตรวจแล้วเว็บตอบกลับปกติไหม ถ้ามีปัญหาจะอธิบายสาเหตุและมีปุ่มพาไปแก้", "Status box", "Shows whether the site answered its health check. Problems come with the cause and a button to fix them"],
+      [28, 42, "ที่อยู่เว็บ", "ในเครื่อง และ ลิงก์ออนไลน์ (ถ้าเปิดไว้)", "Addresses", "Local address and public link (if shared)"],
+      [66, 33.2, "โฟลเดอร์ / เทอร์มินัล / phpMyAdmin", "เปิดโฟลเดอร์เว็บ · เปิดหน้าต่างคำสั่งที่พร้อมใช้ php, node, composer · จัดการฐานข้อมูลด้วย phpMyAdmin (เข้าระบบให้อัตโนมัติ)", "Folder / Terminal / phpMyAdmin", "Open the site folder · a terminal with php, node and composer ready · phpMyAdmin, signed in for you"],
+      [66, 38.5, "คัดลอก / เปิดออนไลน์ / ทำสำเนา / ส่งออก", "คัดลอกที่อยู่ · ไปหน้าโฮสต์ · สร้างเว็บซ้ำ · ส่งออกโปรไฟล์ไปเครื่องอื่น", "Copy / Make public / Duplicate / Export", "Copy the address · go to Hosting · duplicate the site · export its profile to another PC"],
+      [70, 60, "ติดตั้งแพ็กเกจ (composer install)", "ขึ้นเฉพาะเว็บที่มี composer.json — ถ้ายังไม่มีโฟลเดอร์ vendor ให้กดก่อนเริ่มเว็บ", "Install packages (composer install)", "Only for sites with composer.json – press it before starting if there is no vendor folder"],
+      [77, 84, "คอนโซล", "ข้อความจากเว็บสด ๆ (รหัสผ่านและ token ถูกซ่อนให้อัตโนมัติ)", "Console", "Live output from the site (passwords and tokens are hidden automatically)"],
+    ] },
+  { id: "domain", group: ["จัดการเว็บ", "Managing a site"], title: ["ชื่อเว็บในเครื่อง (.test + HTTPS)", "Local name (.test + HTTPS)"], menu: ["หน้ารายละเอียด → เลื่อนลงล่างสุด", "Server details → scroll to the bottom"], img: "05-domain",
+    lead: ["เปิดเว็บด้วยชื่อสวย ๆ เช่น https://myshop.test แทน 127.0.0.1:8001 มีรูปกุญแจเหมือนเว็บจริง (ใช้ได้เฉพาะเครื่องนี้)",
+           "Open the site as https://myshop.test instead of 127.0.0.1:8001, with a padlock like a real site (this PC only)."],
+    pins: [
+      [35, 82.6, "พิมพ์ชื่อ", "ใช้ a-z 0-9 และ - เช่น myshop (ลงท้าย .test ให้อัตโนมัติ)", "Type a name", "Use a-z, 0-9 and -, e.g. myshop (.test is added for you)"],
+      [53, 82.6, "ตั้งชื่อนี้", "Windows จะถามสิทธิ์ผู้ดูแล 1 ครั้ง ให้กด Yes", "Use this name", "Windows asks for administrator approval once – press Yes"],
+    ],
+    howto: { t: ["ตั้งครั้งแรก", "First-time setup"], s: [
+      [`พิมพ์ชื่อ แล้วกด ${k("ตั้งชื่อนี้")} → หน้าต่าง Windows ขึ้น กด <b>Yes</b>`, `Type a name and press ${k("Use this name")} → Windows asks, press <b>Yes</b>`],
+      [`กด ${k("ติดตั้งใบรับรอง")} (ครั้งเดียวต่อเครื่อง) → หน้าต่าง Security Warning กด <b>Yes</b>`, `Press ${k("Install certificate")} (once per PC) → Security Warning, press <b>Yes</b>`],
+      ["ปิดเบราว์เซอร์ทุกหน้าต่างแล้วเปิดใหม่ → เข้า https://ชื่อ.test", "Close every browser window, open it again → go to https://name.test"],
+    ], warn: ["ต้องใช้พอร์ต 80 และ 443 — ถ้า Apache ของ XAMPP หรือ IIS เปิดอยู่ให้ปิดก่อน", "Needs ports 80 and 443 – stop XAMPP's Apache or IIS first if they are running."] } },
+  { id: "edit", group: ["จัดการเว็บ", "Managing a site"], title: ["แก้ไขการตั้งค่า", "Edit Configuration"], menu: ["หน้ารายละเอียด → แท็บ แก้ไขการตั้งค่า", "Server details → Edit Configuration tab"], img: "06-edit",
+    lead: ["ส่วนบน (ตั้งค่าหลัก) พอสำหรับเกือบทุกคน ส่วนขั้นสูงซ่อนไว้ กดบันทึกแล้วรีสตาร์ทเว็บเพื่อให้มีผล",
+           "The main settings at the top are enough for almost everyone; advanced ones are folded away. Save, then restart the site to apply."],
+    pins: [
+      [40, 36.4, "ชื่อ / โฟลเดอร์", "ชื่อที่แสดงในโปรแกรม และโฟลเดอร์ของเว็บ", "Name / folder", "The name shown in the app and the site's folder"],
+      [58, 45.6, "พอร์ต + ตรวจ", "เลขพอร์ต กด “ตรวจ” เพื่อดูว่าว่างไหม", "Port + Check", "The port number – press “Check” to see if it is free"],
+      [77, 45.6, "ฐานข้อมูล", "ชนิด (ไม่ใช้ / SQLite / MariaDB / MySQL / PostgreSQL) และชื่อฐานข้อมูล", "Database", "Type (none / SQLite / MariaDB / MySQL / PostgreSQL) and database name"],
+      [40, 54.6, "รุ่น PHP", "เลือกได้ 7.4–8.5 แต่ละเว็บคนละรุ่นได้ ถ้ายังไม่มีจะติดตั้งให้ตอนกดเริ่ม · รุ่นที่ขึ้น “หมดอายุ” ไม่ควรเปิดออนไลน์", "PHP version", "7.4–8.5, a different one per site; installed on Start if missing · don't put “end of life” versions online"],
+      [37.5, 63.2, "ตัวเลือกสำคัญ", "เปิดเองเมื่อเปิดเครื่อง · ล่มแล้วเปิดใหม่เอง · สำรองข้อมูลอัตโนมัติทุกวัน", "Key options", "Start with Windows · restart after a crash · daily automatic backups"],
+      [37.5, 68.6, "ตั้งค่าขั้นสูง", "ไฟล์ที่รัน · เครือข่าย · ฐานข้อมูลภายนอก · จำกัด CPU/RAM · โฟลเดอร์อัปโหลดที่ห้ามรันสคริปต์", "Advanced", "Executable · network · external database · CPU/RAM limits · upload folders where scripts never run"],
+      [90.2, 68.6, "บันทึกการตั้งค่า", "กดทุกครั้งหลังแก้", "Save configuration", "Press it after every change"],
+      [58.8, 85, "กฎ .htaccess", "เว็บที่เขียนมาให้ Apache/XAMPP ใช้ได้เลย กด “ดูรายละเอียด” เพื่อดูบรรทัดที่ใช้ได้ / แปลงไม่ได้", ".htaccess rules", "Sites written for Apache/XAMPP work as they are – press “Details” to see which lines were applied or not"],
+    ] },
+  { id: "console", group: ["จัดการเว็บ", "Managing a site"], title: ["คอนโซล", "Console"], menu: ["หน้ารายละเอียด → แท็บ คอนโซล", "Server details → Console tab"], img: "07-console",
+    lead: ["ดูข้อความจากเว็บหรือเกมแบบเต็มจอ ใช้หาสาเหตุเวลาเว็บมีปัญหา", "Full-screen output from the site or game – the place to look when something goes wrong."],
+    pins: [
+      [29, 28, "ค้นหา", "พิมพ์คำที่ต้องการหา เช่น error", "Search", "Type a word to find, e.g. error"],
+      [46, 28, "ระดับ", "แสดงทั้งหมด หรือเฉพาะ error / warn", "Level", "Everything, or only errors / warnings"],
+      [61.5, 28, "แหล่ง", "เลือกดูเฉพาะส่วน เช่น caddy (เว็บเซิร์ฟเวอร์) หรือ php", "Source", "Only one part, e.g. caddy (the web server) or php"],
+      [89, 28, "เลื่อนตาม / คัดลอก / ส่งออก / ล้าง", "เลื่อนตามบรรทัดล่าสุด · คัดลอกทั้งหมด · บันทึกเป็นไฟล์ · ล้างหน้าจอ", "Follow / copy / export / clear", "Follow the newest line · copy everything · save to a file · clear the screen"],
+      [55.5, 96.4, "ส่งคำสั่ง", "สำหรับเกม เช่น Minecraft พิมพ์ say hello หรือ stop (เว็บทั่วไปไม่ใช้ช่องนี้)", "Send a command", "For games, e.g. Minecraft: say hello or stop (websites don't use this box)"],
+    ] },
+  { id: "hosting", group: ["ออนไลน์", "Going online"], title: ["โฮสต์ / เครือข่าย (เว็บที่ออนไลน์อยู่)", "Hosting / Network (a site that is online)"], menu: ["โฮสต์ / เครือข่าย", "Hosting / Network"], img: "08-hosting-online",
+    lead: ["ดูและจัดการลิงก์ที่ให้คนอื่นเข้าเว็บ สถานะ “ออนไลน์สาธารณะ” ขึ้นก็ต่อเมื่อโปรแกรมตรวจผ่านอินเทอร์เน็ตแล้วว่าเข้าได้จริง",
+           "See and manage the link other people use. “Public Online” only appears after the app has checked over the internet that the link really works."],
+    pins: [
+      [86, 12.8, "เลือกเว็บ", "เลือกว่าจะดู / ตั้งค่าเว็บไหน", "Pick a site", "Which site to view or set up"],
+      [59, 28.4, "ลิงก์ออนไลน์", "ลิงก์ที่ส่งให้คนอื่นได้เลย", "Public link", "The link you can send to people"],
+      [59, 37.2, "ผลการตรวจ", "ยืนยันว่าเปิดจากภายนอกได้ (HTTP 200) พร้อมเวลาที่ตรวจ", "Check result", "Confirms it opens from outside (HTTP 200), with the time of the check"],
+      [32.5, 49.4, "คัดลอก / เปิดดู / เปิดเองเมื่อเปิดเครื่อง", "คัดลอกลิงก์ · ลองเปิด · ให้ลิงก์กลับมาเองหลังรีสตาร์ทเครื่อง", "Copy / Open / Start with Windows", "Copy the link · try it · bring the link back after a reboot"],
+      [91.4, 49.4, "ปิดการเข้าถึง", "หยุดให้คนภายนอกเข้า (เว็บในเครื่องยังทำงาน)", "Stop sharing", "Ends outside access (the site keeps running locally)"],
+      [33, 60, "Cloudflare Tunnel", "ใช้ tunnel เดียวกับหลายเว็บ ดูชื่อเว็บทั้งหมดที่ตั้งไว้ใน Cloudflare", "Cloudflare Tunnel", "One tunnel for many sites – lists every hostname set up in Cloudflare"],
+      [88, 80.8, "แก้ให้ตรง", "ถ้าพอร์ตใน Cloudflare ไม่ตรงกับเว็บ (ทำให้ขึ้น 502) กดปุ่มนี้", "Fix", "If the port in Cloudflare does not match the site (causing 502), press this"],
+    ] },
+  { id: "publish", group: ["ออนไลน์", "Going online"], title: ["เปิดให้คนอื่นเข้าเว็บ (ครั้งแรก)", "Sharing a site (first time)"], menu: ["โฮสต์ / เครือข่าย → เลือกเว็บที่ยังไม่ออนไลน์", "Hosting / Network → pick a site that is not online yet"], img: "09-hosting-publish",
+    lead: ["เลือก 1 แบบ แล้วกดปุ่มเดียว ไม่ต้องตั้งเราเตอร์", "Pick one option and press one button – no router setup needed."],
+    pins: [
+      [32.5, 29.4, "ลิงก์ชั่วคราว (ทดลอง)", "ไม่ต้องสมัครอะไร ได้ลิงก์ trycloudflare.com ทันที — ลิงก์เปลี่ยนทุกครั้งที่เปิดใหม่", "Temporary link (try now)", "No account needed – an instant trycloudflare.com link that changes every time"],
+      [58.7, 29.4, "โดเมนของฉัน (ถาวร)", "ใช้โดเมนของคุณผ่าน Cloudflare Tunnel เหมาะกับเว็บที่ใช้จริง", "My domain (permanent)", "Your own domain through Cloudflare Tunnel – for real use"],
+      [83.5, 29.4, "เฉพาะในบ้าน / Wi-Fi เดียวกัน", "เครื่องอื่นในวง LAN เข้าได้ ไม่ออกอินเทอร์เน็ต", "Home / same Wi-Fi only", "Other devices on your network, not the internet"],
+      [40, 48, "ขั้นตอนใน Cloudflare", "ทำครั้งเดียวต่อเว็บ — ถ้าพอร์ตไม่ตรง โปรแกรมปรับให้เอง", "What Cloudflare needs", "Once per site – if the port differs, the app adjusts it"],
+      [77.2, 52.4, "ชื่อเว็บ", "ชื่อเต็มที่ตั้งไว้ใน Cloudflare เช่น shop.example.com", "Public hostname", "The full name set up in Cloudflare, e.g. shop.example.com", [77.2, 54.2]],
+      [22.7, 60.8, "ยืนยัน", "ติ๊กว่าเข้าใจว่าทุกคนที่มีลิงก์จะเข้าเว็บได้ (ฐานข้อมูลไม่ถูกเปิดออกไป)", "Confirm", "Tick that anyone with the link can open the site (the database is never exposed)", [22.7, 64]],
+      [91, 66.8, "เปิดเลย", "เริ่มเชื่อมต่อ แล้วตรวจว่าเข้าได้จริง", "Go", "Connects, then checks that it really works", [91.9, 70.2]],
+    ],
+    howto: { t: ["ใช้โดเมนของตัวเองครั้งแรก", "Using your own domain the first time"], s: [
+      ["เข้า Cloudflare → Zero Trust → Networks → Tunnels → สร้าง tunnel แล้วคัดลอก token มาวางในโปรแกรม (ทำครั้งเดียว)", "In Cloudflare → Zero Trust → Networks → Tunnels, create a tunnel and paste its token into the app (once)"],
+      ["ใน tunnel เพิ่ม Public Hostname: ใส่ชื่อเว็บ · Type <b>HTTP</b> · URL ตามที่โปรแกรมบอก (เช่น 127.0.0.1:8001)", "In the tunnel add a Public Hostname: your site name · Type <b>HTTP</b> · the URL the app shows (e.g. 127.0.0.1:8001)"],
+      [`กลับมาใส่ชื่อเว็บ ติ๊กยืนยัน แล้วกด ${k("เปิดเลย")}`, `Back in the app, enter the hostname, tick the confirmation and press ${k("Go")}`],
+    ], tip: ["หน้า admin ของเว็บ ควรตั้ง Cloudflare Access ล็อกไว้ให้เฉพาะอีเมลของคุณ", "Protect the site's admin pages with Cloudflare Access so only your email can open them."] } },
+  { id: "database", group: ["ข้อมูล", "Data"], title: ["ฐานข้อมูล", "Database Manager"], menu: ["ฐานข้อมูล", "Database Manager"], img: "10-database",
+    lead: ["ดูและแก้ข้อมูลในตารางได้เลยในโปรแกรม แก้ผิดได้ไม่ต้องกลัว — โปรแกรมสำรองก่อนแก้ และคำสั่งอันตรายต้องยืนยัน 2 ครั้ง",
+           "View and edit table data right in the app. Mistakes are safe – a backup is taken before changes, and dangerous statements need two confirmations."],
+    pins: [
+      [72.5, 12.8, "เลือกเว็บ", "เลือกฐานข้อมูลของเว็บไหน", "Pick a site", "Which site's database to open"],
+      [92.2, 12.8, "phpMyAdmin", "เปิด phpMyAdmin เข้าระบบให้อัตโนมัติ (เปิดได้เฉพาะเครื่องนี้)", "phpMyAdmin", "Opens phpMyAdmin, signed in for you (this PC only)"],
+      [23.8, 22.4, "Redis", "ที่เก็บข้อมูลชั่วคราวใน RAM ช่วยให้เว็บเร็วขึ้น กดปุ่มเดียวเพื่อติดตั้งและเปิด (เปิดได้เฉพาะเครื่องนี้)", "Redis", "An in-memory cache that makes sites faster – one button installs and starts it (this PC only)"],
+      [38, 35.6, "แท็บภาพรวม / ตั้งค่า / สำรอง", "ทดสอบการเชื่อมต่อ · รัน migration · สำรอง · นำเข้า / ส่งออก SQL · ย้ายข้อมูลจาก XAMPP", "Overview / setup / backup tab", "Test connection · run migrations · back up · import / export SQL · move data from XAMPP"],
+      [29, 53.2, "รายการตาราง", "กดที่ชื่อตารางเพื่อดูข้อมูล ตัวเลข = จำนวนแถว", "Tables", "Press a table name to see its data; the number is the row count"],
+      [63.7, 44.8, "ค้นหา / แสดงรหัสผ่าน / เพิ่มแถว / ลบ", "ช่องรหัสผ่านถูกซ่อนเป็น •••• จนกว่าจะกดแสดง", "Search / Show secrets / Add row / Delete", "Password columns stay hidden as •••• until you press Show"],
+      [60, 61.4, "ตารางข้อมูล", "ดับเบิลคลิกช่องเพื่อแก้ · Enter = บันทึก · Esc = ยกเลิก", "Data grid", "Double-click a cell to edit · Enter saves · Esc cancels"],
+      [28.7, 74.6, "พิมพ์คำสั่ง SQL", "สำหรับคนที่ใช้ SQL เป็น คำสั่งแก้ข้อมูลต้องกดยืนยันก่อนรัน", "SQL console", "For people who know SQL – statements that change data ask for confirmation first"],
+    ] },
+  { id: "runtimes", group: ["ระบบ", "System"], title: ["รันไทม์ (โปรแกรมที่ใช้รันเว็บ)", "Runtime Manager"], menu: ["รันไทม์", "Runtime Manager"], img: "11-runtimes",
+    lead: ["PHP, Caddy, Node.js, Java, MariaDB, PostgreSQL, Redis, Composer, phpMyAdmin ฯลฯ — ดาวน์โหลดจากเว็บทางการและตรวจไฟล์ก่อนติดตั้งทุกครั้ง ปกติไม่ต้องเข้าหน้านี้ เพราะโปรแกรมถามติดตั้งให้เองตอนต้องใช้",
+           "PHP, Caddy, Node.js, Java, MariaDB, PostgreSQL, Redis, Composer, phpMyAdmin and more – downloaded from trusted sources and verified before every install. You rarely need this page: the app offers to install things when they are needed."],
+    pins: [
+      [91.5, 21.8, "สถานะ", "ติดตั้งแล้ว / มีในเครื่อง (ติดตั้งไว้เอง) / ยังไม่ติดตั้ง", "Status", "installed / system (you installed it yourself) / not installed"],
+      [26, 47.4, "เลือกรุ่น", "พิมพ์รุ่นที่ต้องการ เช่น 8.3 (เว้นว่าง = รุ่นล่าสุด)", "Version", "Type a version, e.g. 8.3 (empty = latest)"],
+      [37.5, 47.4, "ติดตั้ง / อัปเดต", "ดาวน์โหลด ตรวจ SHA-256 แล้วติดตั้ง", "Install / update", "Download, verify SHA-256, install"],
+      [50, 33.8, "ใช้ตัวนี้ / ตรวจสอบ / ซ่อม", "เลือกรุ่นที่จะใช้เป็นค่าเริ่มต้น · ทดสอบว่ารันได้ · ติดตั้งใหม่ถ้าไฟล์เสีย", "Use / Validate / Repair", "Make this the default version · test that it runs · reinstall if files are damaged"],
+      [65.6, 71, "Java", "เว้นว่าง = ติดตั้ง Java รุ่นล่าสุด (สำหรับ Minecraft รุ่นใหม่)", "Java", "Leave empty to install the latest Java (needed by new Minecraft versions)"],
+      [91, 13, "เปิดโฟลเดอร์รันไทม์", "ดูไฟล์ที่ติดตั้งไว้", "Open runtimes folder", "See the installed files"],
+    ] },
+  { id: "monitor", group: ["ระบบ", "System"], title: ["ทรัพยากรระบบ", "Resource Monitor"], menu: ["ทรัพยากรระบบ", "Resource Monitor"], img: "12-monitor",
+    lead: ["ดูว่าแต่ละเว็บ / เกม ใช้ CPU และ RAM เท่าไร ช่วยหาตัวที่ทำให้เครื่องช้า", "How much CPU and RAM each site or game uses – find what slows the PC down."],
+    pins: [
+      [59, 28, "ทั้งเครื่อง", "CPU · หน่วยความจำ · เครือข่าย", "Whole PC", "CPU · memory · network"],
+      [59, 60, "แยกตามเซิร์ฟเวอร์", "CPU · RAM · จำนวนโปรเซส · ทำงานมานาน · ผู้เล่น (เกม) · กราฟย้อนหลัง", "Per server", "CPU · RAM · processes · uptime · players (games) · history graph"],
+    ] },
+  { id: "logs", group: ["ระบบ", "System"], title: ["บันทึกเซิร์ฟเวอร์", "Server Logs"], menu: ["บันทึกเซิร์ฟเวอร์", "Server Logs"], img: "13-logs",
+    lead: ["เหมือนคอนโซล แต่เลือกดูได้ทุกเซิร์ฟเวอร์จากที่เดียว รหัสผ่านและ token ถูกซ่อนเป็น [REDACTED] เสมอ", "Like the console, but for every server in one place. Passwords and tokens always show as [REDACTED]."],
+    pins: [
+      [78, 12.8, "เลือกเซิร์ฟเวอร์", "เลือกว่าจะดูบันทึกของตัวไหน", "Pick a server", "Whose logs to show"],
+      [93.5, 12.8, "ไฟล์บันทึก", "เปิดโฟลเดอร์ที่เก็บไฟล์บันทึกทั้งหมด", "Log files", "Opens the folder with all log files"],
+      [46, 20.8, "ตัวกรอง", "ค้นหา · ระดับ · แหล่งที่มา", "Filters", "Search · level · source"],
+      [92, 20.8, "ส่งออก", "บันทึกเป็นไฟล์ไว้ส่งให้คนช่วยดู (ข้อมูลลับถูกซ่อนแล้ว)", "Export", "Save to a file to share with someone helping you (secrets already hidden)"],
+    ] },
+  { id: "backups", group: ["ข้อมูล", "Data"], title: ["สำรองข้อมูล", "Backups"], menu: ["สำรองข้อมูล", "Backups"], img: "14-backups",
+    lead: ["ไฟล์สำรองเก็บแยกจากโปรแกรม ถอนการติดตั้งแล้วไม่หาย ตั้งสำรองอัตโนมัติได้ที่หน้าแก้ไขการตั้งค่าของแต่ละเว็บ",
+           "Backups are stored apart from the app and survive an uninstall. Turn on automatic backups in each site's Edit Configuration."],
+    pins: [
+      [59, 21.6, "คำเตือน", "ไฟล์สำรองไม่ได้เข้ารหัส อย่าส่งต่อหรืออัปโหลดสาธารณะ", "Warning", "Backups are not encrypted – don't share them or upload them publicly"],
+      [25.6, 40.4, "สำรองตอนนี้", "สำรองฐานข้อมูล (และไฟล์เว็บ ถ้าเลือกไว้) ทันที", "Backup now", "Backs up the database (and site files, if chosen) right away"],
+      [59, 67, "ไฟล์สำรองทั้งหมด", "วันที่ · เว็บ · ชนิด · ขนาด · ตำแหน่งไฟล์ — กู้คืนได้ที่หน้าฐานข้อมูล", "All backups", "Date · site · type · size · file location – restore from the Database page"],
+      [91.6, 13, "เปิดโฟลเดอร์สำรอง", "ดูไฟล์ใน Windows Explorer", "Open backups folder", "See the files in Windows Explorer"],
+    ] },
+  { id: "mail", group: ["ข้อมูล", "Data"], title: ["อีเมลทดสอบ", "Test mail"], menu: ["อีเมลทดสอบ", "Test mail"], img: "15-mail",
+    lead: ["อีเมลที่เว็บส่ง (เช่น รีเซ็ตรหัสผ่าน ยืนยันสมัครสมาชิก) จะมาอยู่ที่นี่แทนการส่งออกไปจริง ใช้ทดสอบโดยไม่ต้องมีอีเมลจริง",
+           "Email your sites send (password resets, sign-up confirmations…) lands here instead of going out – test without a real mailbox."],
+    pins: [
+      [34, 22.5, "รายการอีเมล", "ล่าสุดอยู่บนสุด กดเพื่อเปิดอ่าน", "Mail list", "Newest first – press one to read it", [34, 27.5]],
+      [57.5, 37, "HTML / ข้อความ / Headers", "ดูแบบหน้าตาจริง แบบตัวอักษร หรือรายละเอียดทางเทคนิค", "HTML / Text / Headers", "As it looks, as plain text, or the technical details", [57.5, 42.6]],
+      [93.5, 36.4, "ลบ", "ลบฉบับนี้ (ปุ่มลบทั้งหมดอยู่ด้านบนขวา)", "Delete", "Deletes this one (Delete all is at the top)", [93.5, 42]],
+      [86.5, 13, "รีเฟรช", "ปกติอัปเดตเองทุก 4 วินาที", "Refresh", "It also updates by itself every 4 seconds", [21.8, 18.6]],
+    ],
+    howto: { t: ["ใช้กับ PHPMailer หรือ Laravel", "With PHPMailer or Laravel"], s: [
+      ["เว็บ PHP ที่ใช้ <code>mail()</code> ส่งมาที่นี่อัตโนมัติ ไม่ต้องตั้งอะไร", "PHP sites that use <code>mail()</code> deliver here automatically – nothing to set up"],
+      ["PHPMailer / Laravel: ตั้ง SMTP host <code>127.0.0.1</code> พอร์ต <code>1025</code> ไม่ต้องมีรหัสผ่าน", "PHPMailer / Laravel: SMTP host <code>127.0.0.1</code>, port <code>1025</code>, no password"],
+    ], tip: ["เว็บที่ตั้งให้ส่งผ่าน Gmail หรือ SMTP จริงอยู่แล้ว จะส่งออกตามปกติ ไม่ถูกดัก", "Sites already set up to send through Gmail or another real SMTP server send normally and are not caught."] } },
+  { id: "settings", group: ["ระบบ", "System"], title: ["ตั้งค่า + แจ้งเตือนเมื่อล่ม", "Settings + downtime alerts"], menu: ["ตั้งค่า", "Settings"], img: "16-settings",
+    lead: ["ตั้งให้ส่งข้อความเข้า Discord หรือ Telegram เมื่อเว็บ / เกม / ลิงก์ออนไลน์ล่ม และเมื่อกลับมา รวมถึงภาษา ธีม และพฤติกรรมเมื่อปิดหน้าต่าง",
+           "Get a Discord or Telegram message when a site, game or public link goes down and when it is back. Also language, theme and what closing the window does."],
+    pins: [
+      [22.8, 29.2, "เปิดการแจ้งเตือน", "ติ๊กเพื่อเริ่มเฝ้าดู", "Turn on alerts", "Tick to start watching"],
+      [40, 42.2, "Discord", "วางลิงก์ Webhook (ตั้งค่าห้อง → Integrations → Webhooks → New Webhook → Copy Webhook URL)", "Discord", "Paste a webhook URL (channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL)"],
+      [77.2, 42.2, "Telegram", "วาง Bot token จาก @BotFather แล้วส่งข้อความหาบอท 1 ครั้ง", "Telegram", "Paste the bot token from @BotFather, then send your bot one message"],
+      [90, 52.4, "ค้นหาให้", "หา Chat ID ให้อัตโนมัติ", "Find", "Finds the chat ID for you"],
+      [41.2, 66.8, "ตัวเลือก", "แจ้งเมื่อกลับมา · เฝ้าดูลิงก์ออนไลน์ · แจ้งเมื่อล่มนานเกินกี่วินาที (กันแจ้งตอนรีสตาร์ทสั้น ๆ)", "Options", "Tell me when it is back · watch public links · alert only after N seconds down (skips short restarts)"],
+      [87.5, 72.4, "บันทึกและส่งข้อความทดสอบ", "ถ้าข้อความเข้ามือถือ แปลว่าตั้งถูกแล้ว", "Save and send a test", "If the message reaches your phone, it is set up correctly"],
+      [93.2, 13, "บันทึก", "บันทึกการตั้งค่าส่วนอื่น (ภาษา ธีม เมื่อกดปิดหน้าต่าง ฯลฯ)", "Save", "Saves the other settings (language, theme, closing the window, …)"],
+    ] },
+];
+
+// ---- language choice: ?lang=en, then the last choice, then the browser language ----
+const LANGS = ["th", "en"];
+function initialLang() {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (LANGS.includes(q)) return q;
+  try { const s = localStorage.getItem("tsm-guide-lang"); if (LANGS.includes(s)) return s; } catch (e) {}
+  return (navigator.language || "").toLowerCase().startsWith("th") ? "th" : "en";
+}
+let lang = initialLang();
+const t = (pair) => (Array.isArray(pair) ? pair[lang === "en" ? 1 : 0] : pair);
+
+function render() {
+  const en = lang === "en";
+  document.documentElement.lang = lang;
+  document.title = t(UI.docTitle);
+
+  const sw = `<div class="lang-row"><div class="lang" role="group" aria-label="${t(UI.langLabel)}">`
+    + `<button type="button" data-lang="th" aria-pressed="${!en}">ไทย</button>`
+    + `<button type="button" data-lang="en" aria-pressed="${en}">English</button></div></div>`;
+  let toc = sw + `<div class="label">${t(UI.toc)}</div><a href="#start">${t(UI.start)}</a>`;
+  let lastGroup = "";
+  let html = "";
+  for (const p of PAGES) {
+    const g = t(p.group);
+    if (g !== lastGroup) { toc += `<div class="grp label">${g}</div>`; lastGroup = g; }
+    toc += `<a href="#${p.id}">${t(p.title)}</a>`;
+    const at = (q) => (en && q[6]) ? q[6] : [q[0], q[1]];
+    const name = (q) => en ? q[4] : q[2];
+    const desc = (q) => en ? q[5] : q[3];
+    const pins = p.pins.map((q, i) => { const [x, y] = at(q); return `<button class="pin" type="button" style="--x:${x}%;--y:${y}%" data-i="${i}" aria-label="${i + 1}: ${name(q)}">${i + 1}</button>`; }).join("");
+    const legend = p.pins.map((q, i) => `<li data-i="${i}"><span class="n">${i + 1}</span><span><b>${name(q)}</b><span class="d">${desc(q)}</span></span></li>`).join("");
+    let how = "";
+    if (p.howto) {
+      how = `<div class="howto"><h3>${t(p.howto.t)}</h3><ol>${p.howto.s.map((s) => `<li>${t(s)}</li>`).join("")}</ol>`
+        + (p.howto.warn ? `<div class="note warn"><b>${t(UI.warn)}</b>${t(p.howto.warn)}</div>` : "")
+        + (p.howto.tip ? `<div class="note tip"><b>${t(UI.tip)}</b>${t(p.howto.tip)}</div>` : "") + `</div>`;
+    }
+    const src = en ? `img/en/${p.img}.jpg` : `img/${p.img}.jpg`;
+    html += `<section class="pg" id="${p.id}">
+      <h2>${t(p.title)}</h2>
+      <div class="where">${t(UI.goTo)}: <b>${t(p.menu)}</b></div>
+      <p class="lead">${t(p.lead)}</p>
+      <div class="shot">
+        <figure><div class="frame"><img src="${src}" alt="${t(UI.shotAlt)} ${t(p.title)}" width="800" height="500" loading="lazy">${pins}</div>
+        <figcaption>${t(UI.caption)}</figcaption></figure>
+        <ol class="legend">${legend}</ol>
+      </div>${how}
+    </section>`;
+  }
+  toc += `<div class="grp label">${t(UI.other)}</div><a href="#faq">${t(UI.faq)}</a>`;
+
+  const tocEl = document.getElementById("toc");
+  tocEl.setAttribute("aria-label", t(UI.toc));
+  tocEl.innerHTML = toc;
+  document.getElementById("hero").innerHTML = `<h1>${t(UI.docTitle)}</h1><p>${t(UI.heroText)}</p>`
+    + `<div class="meta"><span class="chip">${t(UI.version)}</span><span class="chip">${t(UI.demo)}</span></div>`;
+  document.getElementById("start").innerHTML = `<h2>${t(UI.start)}</h2><p class="lead">${t(UI.startLead)}</p><div class="quick">`
+    + QUICK.map((c) => `<div class="card"><b>${t(c.t)}</b><ol>${c.s.map((s) => `<li>${t(s)}</li>`).join("")}</ol></div>`).join("") + `</div>`;
+  document.getElementById("pages").innerHTML = html;
+  document.getElementById("faq").innerHTML = `<h2>${t(UI.faq)}</h2>`
+    + FAQ.map((f) => { const [q, a] = t(f); return `<details><summary>${q}</summary><p>${a}</p></details>`; }).join("");
+
+  tocEl.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
+  bind();
+}
+
+function setLang(next) {
+  if (next === lang) return;
+  // keep the reader at the same section after switching
+  const secs = [...document.querySelectorAll("main section.pg")];
+  const here = secs.filter((s) => s.getBoundingClientRect().top <= 80).pop();
+  lang = next;
+  try { localStorage.setItem("tsm-guide-lang", lang); } catch (e) {}
+  render();
+  if (here) document.getElementById(here.id)?.scrollIntoView();
+  document.querySelector(`.lang button[data-lang="${lang}"]`)?.focus();
+}
+
+function bind() {
+  // click a screenshot: show it as large as the screen allows (pins included)
+  document.querySelectorAll(".frame img").forEach((img) => {
+    img.addEventListener("click", () => {
+      const sec = img.closest("section.pg");
+      const ov = document.createElement("div");
+      ov.className = "zoomer";
+      ov.setAttribute("role", "dialog");
+      ov.setAttribute("aria-label", t(UI.zoom));
+      const box = document.createElement("div");
+      const frame = img.closest(".frame").cloneNode(true);
+      frame.querySelectorAll(".pin").forEach((pin) => {
+        const li = sec.querySelector(`ol.legend li[data-i="${pin.dataset.i}"] b`);
+        pin.title = li ? li.textContent : "";
+      });
+      box.appendChild(frame);
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = t(UI.zoomHint);
+      box.appendChild(hint);
+      ov.appendChild(box);
+      const close = () => { ov.remove(); document.removeEventListener("keydown", onKey); };
+      const onKey = (e) => { if (e.key === "Escape") close(); };
+      ov.addEventListener("click", close);
+      document.addEventListener("keydown", onKey);
+      document.body.appendChild(ov);
+    });
+  });
+
+  // link pins and legend items
+  document.querySelectorAll("section.pg").forEach((sec) => {
+    const set = (i, on) => sec.querySelectorAll(`[data-i="${i}"]`).forEach((el) => el.classList.toggle("on", on));
+    sec.querySelectorAll(".pin, ol.legend li").forEach((el) => {
+      const i = el.dataset.i;
+      el.addEventListener("mouseenter", () => set(i, true));
+      el.addEventListener("mouseleave", () => set(i, false));
+      el.addEventListener("focus", () => set(i, true));
+      el.addEventListener("blur", () => set(i, false));
+      if (el.classList.contains("pin")) el.addEventListener("click", () => {
+        const li = sec.querySelector(`ol.legend li[data-i="${i}"]`);
+        sec.querySelectorAll(".on").forEach((x) => x.classList.remove("on"));
+        set(i, true);
+        li?.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      });
+    });
+  });
+}
+
+render();
+</script>

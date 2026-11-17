@@ -1,0 +1,15 @@
+name: Feature request / ขอฟีเจอร์
+description: Suggest an idea / เสนอความสามารถใหม่
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do? / อยากทำอะไร
+      description: Describe the situation, not only the solution / เล่าสถานการณ์ที่เจอ ไม่ใช่แค่วิธีแก้
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could the app help? / อยากให้แอปช่วยอย่างไร

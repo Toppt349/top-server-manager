@@ -1,0 +1,63 @@
+name: Windows build & test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Typecheck UI
+        run: npm run typecheck
+
+      - name: Dependency vulnerability scan
+        run: |
+          npm audit --omit=dev --audit-level=high
+          cargo install cargo-audit --locked
+          cargo audit
+
+      - name: Rust unit + integration tests
+        run: cargo test -p tsm-core -- --test-threads=4
+
+      - name: Acceptance test (UNO + PHP + Caddy + SQLite)
+        shell: pwsh
+        run: |
+          cargo build -p tsm-cli
+          $root = "$env:RUNNER_TEMP\tsm-e2e"
+          ./target/debug/tsm-cli.exe --root $root runtime install php
+          ./target/debug/tsm-cli.exe --root $root runtime install caddy
+          ./target/debug/tsm-cli.exe --root $root e2e-uno "$env:RUNNER_TEMP\games\UNO"
+
+      - name: Build installer
+        run: npx tauri build
+
+      - name: Package dist
+        shell: pwsh
+        run: ./scripts/build-dist.ps1 -SkipBuild
+
+      - name: Installer smoke test (silent install / uninstall)
+        shell: pwsh
+        run: ./scripts/installer-smoke-test.ps1 -Installer dist/TOP-Server-Manager-Setup.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TOP-Server-Manager
+          path: dist/*

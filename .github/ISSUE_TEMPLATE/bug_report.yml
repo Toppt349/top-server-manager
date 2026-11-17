@@ -1,0 +1,66 @@
+name: Bug report / แจ้งบั๊ก
+description: Something does not work as expected / โปรแกรมทำงานไม่ถูกต้อง
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! / ขอบคุณที่แจ้งครับ
+        **Security problem?** Do not post it here – see SECURITY.md. / **ช่องโหว่ความปลอดภัย** อย่าโพสต์ที่นี่ ดู SECURITY.md
+        **Never paste passwords, tokens or Cloudflare / ngrok keys.** / **ห้ามวางรหัสผ่าน token หรือคีย์ใด ๆ**
+  - type: input
+    id: version
+    attributes:
+      label: App version / เวอร์ชันแอป
+      description: Shown at the bottom left of the app / ดูได้ที่มุมซ้ายล่างของแอป
+      placeholder: "2.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options: ["Windows 11", "Windows 10", "Other / อื่น ๆ"]
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / ส่วนที่มีปัญหา
+      options:
+        - Install / update / uninstall – ติดตั้ง / ถอนการติดตั้ง
+        - Starting a site or game – เริ่มเว็บ / เกม
+        - Database (MariaDB / PostgreSQL / SQLite / Redis) – ฐานข้อมูล
+        - Hosting / sharing (Cloudflare, playit, LAN…) – เปิดให้คนอื่นเข้า
+        - Runtime download – ดาวน์โหลดรันไทม์
+        - User interface – หน้าจอแอป
+        - Other – อื่น ๆ
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / เกิดอะไรขึ้น
+      description: What you expected and what you saw instead / คาดว่าจะเป็นอย่างไร แล้วเกิดอะไรขึ้นจริง
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / ขั้นตอนที่ทำให้เกิด
+      placeholder: |
+        1. Add Server → …
+        2. Press Start
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / บันทึก
+      description: Server Logs → Export (secrets are already removed). Drag the file here or paste the relevant lines. / หน้าบันทึกเซิร์ฟเวอร์ → ส่งออก (ข้อมูลลับถูกซ่อนแล้ว)
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or anything else / ภาพหน้าจอหรือข้อมูลอื่น

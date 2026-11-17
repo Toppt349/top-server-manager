@@ -1,0 +1,16 @@
+﻿[package]
+name = "tsm-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Headless command line for TOP Server Manager (automation, CI, acceptance tests)."
+
+[[bin]]
+name = "tsm-cli"
+path = "src/main.rs"
+
+[dependencies]
+tsm-core = { path = "../tsm-core" }
+tokio.workspace = true
+serde_json.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
