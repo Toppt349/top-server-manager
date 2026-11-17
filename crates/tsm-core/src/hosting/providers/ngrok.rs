@@ -147,16 +147,33 @@ async fn evaluate(s: &AgentSession) -> HostingState {
         st.message = Some(f.last_error.unwrap_or_else(|| "Waiting for ngrok to assign a public address…".into()));
         return st;
     };
-    st.public_address = Some(addr.clone());
     let (ok, detail) = if let Some(rest) = addr.strip_prefix("tcp://") {
+        // players type host:port into the game, without tcp://
+        st.public_address = Some(rest.to_string());
         let (h, p) = split_host_port(rest, 0);
-        verify_public_tcp(&h, p).await
+        let mc = if t.project.kind == ServerKind::MinecraftJava {
+            crate::players::minecraft_java_status(&h, p, std::time::Duration::from_secs(8)).await
+        } else {
+            None
+        };
+        match mc {
+            Some(i) => (true, format!("Minecraft status ping through {h}:{p} answered ({}/{} players)", i.online, i.max)),
+            None => verify_public_tcp(&h, p).await,
+        }
     } else {
+        st.public_address = Some(addr.clone());
         verify_public_http(&addr).await
     };
     st.status = if ok { HostingStatus::PublicOnline } else { HostingStatus::Connecting };
     st.verification = Some(detail);
-    st.message = Some("The ngrok URL can change whenever the tunnel restarts (unless you use a reserved domain).".into());
+    st.message = Some(if addr.starts_with("tcp://") {
+        crate::tr!(
+            "ที่อยู่ของ ngrok เปลี่ยนใหม่ทุกครั้งที่เปิด tunnel ใหม่ (แพ็กเกจฟรี) — ส่งที่อยู่ล่าสุดให้เพื่อนทุกครั้ง",
+            "The ngrok address changes every time the tunnel restarts (free plan) – send your friends the latest one"
+        )
+    } else {
+        "The ngrok URL can change whenever the tunnel restarts (unless you use a reserved domain).".into()
+    });
     st
 }
 

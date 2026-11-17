@@ -99,7 +99,7 @@ export const api = {
   recommend: (id: string, use_case?: string) => call<T.Recommendation>("recommend_hosting", { id, use_case: use_case ?? null }),
   hostingValidate: (id: string) => call<string[]>("hosting_validate", { id }),
   hostingStart: (id: string) => call<T.HostingState>("hosting_start", { id }),
-  quickPublish: (id: string, mode: "quick" | "domain" | "lan" | "playit", opts: { token?: string; hostname?: string; consent: boolean; firewall: boolean }) =>
+  quickPublish: (id: string, mode: "quick" | "domain" | "lan" | "playit" | "ngrok", opts: { token?: string; hostname?: string; consent: boolean; firewall: boolean }) =>
     call<T.HostingState>("quick_publish", { id, mode, token: opts.token || null, hostname: opts.hostname || null, consent: opts.consent, firewall: opts.firewall }),
   hostingStop: (id: string) => call<void>("hosting_stop", { id }),
   hostingStates: () => call<T.HostingState[]>("hosting_states"),

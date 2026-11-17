@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.3
+
+### English
+- **ngrok for game servers.** The quick share card for Minecraft Java and other TCP servers now offers ngrok next to playit.gg, with step-by-step setup. ngrok TCP needs a card on the ngrok account (not charged on the free plan), and the address changes on every restart. UDP servers such as Bedrock are refused because ngrok has no UDP.
+- ngrok game addresses are shown the way players type them (`0.tcp.ap.ngrok.io:12345`, without `tcp://`). For Minecraft Java the address is verified with a real status ping.
+
+### ภาษาไทย
+- **ใช้ ngrok กับเซิร์ฟเวอร์เกมได้แล้ว:** การ์ดแชร์ของ Minecraft Java และเซิร์ฟเวอร์ TCP อื่น ๆ มีตัวเลือก ngrok เพิ่มข้าง playit.gg พร้อมขั้นตอนทีละข้อ
+  - ngrok แบบ TCP ต้องเพิ่มบัตรในบัญชีก่อน แต่แพ็กเกจฟรีไม่ตัดเงิน
+  - ที่อยู่จะเปลี่ยนทุกครั้งที่เปิดใหม่
+  - ใช้กับเซิร์ฟเวอร์ UDP เช่น Bedrock ไม่ได้ เพราะ ngrok ไม่รองรับ UDP
+- ที่อยู่ของ ngrok แสดงแบบที่ผู้เล่นพิมพ์ในเกมได้เลย (`0.tcp.ap.ngrok.io:12345` ไม่มี `tcp://`) และ Minecraft Java ตรวจด้วยการ ping จริง
+
 ## 2.0.2
 
 ### English

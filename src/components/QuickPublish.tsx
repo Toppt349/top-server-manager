@@ -7,7 +7,7 @@ import type { Project } from "../lib/types";
 import { isWeb, localUrl } from "../lib/format";
 import { AutostartSwitch, Callout, copyText, Field, HostingBadge } from "./ui";
 
-type Mode = "quick" | "domain" | "lan" | "playit";
+type Mode = "quick" | "domain" | "lan" | "playit" | "ngrok";
 
 export default function QuickPublish({ project }: { project: Project }) {
   useT();
@@ -17,7 +17,9 @@ export default function QuickPublish({ project }: { project: Project }) {
   const toast = useStore((s) => s.toast);
   // Cloudflare Tunnel only carries HTTP: games and raw TCP/UDP servers get playit.gg instead.
   const web = isWeb(project.protocol);
+  const udp = project.protocol === "udp" || project.protocol === "tcp_udp";
   const initial: Mode = project.hosting.provider === "lan" ? "lan"
+    : !web && project.hosting.provider === "ngrok" && !udp ? "ngrok"
     : !web ? "playit"
     : project.hosting.cloudflare_mode === "token" && project.hosting.hostname ? "domain" : "quick";
   const [mode, setMode] = useState<Mode>(initial);
@@ -28,9 +30,11 @@ export default function QuickPublish({ project }: { project: Project }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (web) api.cloudflareOverview().then((o) => setTokenSaved(o.token_saved)).catch(() => {});
-    else api.secretExists(`hosting.${project.id}.playit`).then(setTokenSaved).catch(() => {});
-  }, [project.id, web]);
+    setToken("");
+    setTokenSaved(false);
+    if (mode === "playit" || mode === "ngrok") api.secretExists(`hosting.${project.id}.${mode}`).then(setTokenSaved).catch(() => {});
+    else if (web) api.cloudflareOverview().then((o) => setTokenSaved(o.token_saved)).catch(() => {});
+  }, [project.id, web, mode]);
 
   const lanMode = { id: "lan" as Mode, icon: <Home />, title: L("เฉพาะในบ้าน / Wi-Fi เดียวกัน", "Home / same Wi-Fi only"), sub: L("เครื่องอื่นในวงแลนเข้าได้ ไม่ออกอินเทอร์เน็ต", "Other devices on your network, not the internet"), who: L("เหมาะกับ: บ้าน / ห้องเรียน / ออฟฟิศ", "For: home, classroom, office") };
   const MODES: { id: Mode; icon: JSX.Element; title: string; sub: string; who: string }[] = web ? [
@@ -39,6 +43,7 @@ export default function QuickPublish({ project }: { project: Project }) {
     lanMode,
   ] : [
     { id: "playit", icon: <Gamepad2 />, title: L("เพื่อนต่างบ้าน — playit.gg (แนะนำ)", "Friends anywhere – playit.gg (recommended)"), sub: L("ฟรี ไม่ต้องตั้งเราเตอร์ ไม่เปิดเผย IP บ้าน ได้ที่อยู่แบบ ชื่อ.joinmc.link", "Free, no router setup, hides your home IP – you get an address like name.joinmc.link"), who: L("เหมาะกับ: Minecraft / เกม เล่นกับเพื่อนผ่านอินเทอร์เน็ต", "For: Minecraft and games over the internet") },
+    ...(udp ? [] : [{ id: "ngrok" as Mode, icon: <Globe2 />, title: L("เพื่อนต่างบ้าน — ngrok", "Friends anywhere – ngrok"), sub: L("ได้ที่อยู่แบบ 0.tcp.ap.ngrok.io:12345 ทันที — บัญชีต้องเพิ่มบัตรก่อน (ไม่เสียเงิน)", "Instant address like 0.tcp.ap.ngrok.io:12345 – the account needs a card on file (not charged)"), who: L("เหมาะกับ: มีบัญชี ngrok อยู่แล้ว · ที่อยู่เปลี่ยนทุกครั้งที่เปิดใหม่", "For: existing ngrok users · the address changes on every restart") }]),
     lanMode,
   ];
 
@@ -48,7 +53,7 @@ export default function QuickPublish({ project }: { project: Project }) {
   const needsConsent = mode !== "lan";
   const canGo = !busy && (!needsConsent || consent)
     && (mode !== "domain" || (hostname.trim() && (token.trim() || tokenSaved)))
-    && (mode !== "playit" || token.trim() || tokenSaved);
+    && ((mode !== "playit" && mode !== "ngrok") || token.trim() || tokenSaved);
 
   const go = async () => {
     setBusy(true);
@@ -151,7 +156,29 @@ export default function QuickPublish({ project }: { project: Project }) {
           </div>
         </div>
       )}
-      {!web && <p className="dim mt">{L("วิธีอื่น (Direct IP / เปิดพอร์ตเราเตอร์, FRP, ngrok, Tailscale) อยู่ใน “ตั้งค่าขั้นสูง” ด้านล่าง · Cloudflare Tunnel ใช้กับเกมไม่ได้", "Other ways (Direct IP / port forwarding, FRP, ngrok, Tailscale) are under “Advanced” below · Cloudflare Tunnel does not work for games")}</p>}
+      {mode === "ngrok" && (
+        <div className="grid g2 mt">
+          <div>
+            <b>{L("ทำครั้งแรกครั้งเดียวที่ ngrok.com", "One-time setup on ngrok.com")}</b>
+            <ol className="muted" style={{ paddingLeft: 20, lineHeight: 1.8, margin: "6px 0" }}>
+              <li>{L("สมัคร / เข้าสู่ระบบ ngrok.com (แพ็กเกจฟรีใช้ได้)", "Sign up / sign in at ngrok.com (the free plan works)")}</li>
+              <li>{L("Billing → เพิ่มบัตรเครดิต/เดบิต — ngrok บังคับก่อนใช้ TCP แต่ไม่ตัดเงินในแพ็กเกจฟรี", "Billing → add a credit/debit card – ngrok requires it for TCP but does not charge on the free plan")}</li>
+              {!tokenSaved && <li>{L("Your Authtoken → คัดลอกมาวางในช่องขวา", "Your Authtoken → copy it into the box")}</li>}
+              <li>{L("กด “เปิดเลย” แล้วส่งที่อยู่ที่ได้ (เช่น 0.tcp.ap.ngrok.io:12345) ให้เพื่อน — ที่อยู่เปลี่ยนทุกครั้งที่เปิดใหม่", "Press Go and send the address you get (e.g. 0.tcp.ap.ngrok.io:12345) to your friends – it changes every restart")}</li>
+            </ol>
+            <button className="btn sm" onClick={() => api.openUrl("https://dashboard.ngrok.com/get-started/your-authtoken")}><ExternalLink /> {L("เปิด ngrok", "Open ngrok")}</button>
+          </div>
+          <div className="grid" style={{ gap: 12, alignContent: "start" }}>
+            {!tokenSaved && (
+              <Field label="ngrok Authtoken" hint={L("เก็บแบบเข้ารหัส ไม่แสดงกลับ", "Stored encrypted, never shown again")}>
+                <input className="input" type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="2abc…" />
+              </Field>
+            )}
+            {tokenSaved && <div className="badge ok" style={{ alignSelf: "start" }}><CheckCircle2 size={13} /> {L("ใช้ Authtoken ที่บันทึกไว้แล้ว", "Using the saved authtoken")}</div>}
+          </div>
+        </div>
+      )}
+      {!web && <p className="dim mt">{L("วิธีอื่น (Direct IP / เปิดพอร์ตเราเตอร์, FRP, Tailscale) อยู่ใน “ตั้งค่าขั้นสูง” ด้านล่าง · Cloudflare Tunnel ใช้กับเกมไม่ได้", "Other ways (Direct IP / port forwarding, FRP, Tailscale) are under “Advanced” below · Cloudflare Tunnel does not work for games")}</p>}
       {mode === "lan" && <div className="mt"><Callout kind="info">{L("โปรแกรมจะตั้งให้รับการเชื่อมต่อจากวงแลน (รีสตาร์ทให้เอง) และเพิ่มกฎ Firewall เฉพาะเครือข่าย Private — Windows จะถามสิทธิ์ ให้กด Yes", "The server will listen on your LAN (auto restart) and a Private-network firewall rule is added – Windows will ask for permission, press Yes")}</Callout></div>}
       {mode === "quick" && <div className="mt"><Callout kind="info">{L("ลิงก์จะเปลี่ยนใหม่ทุกครั้งที่เปิด — ใช้ทดสอบเท่านั้น ถ้าจะใช้จริงให้เลือก “โดเมนของฉัน”", "The link changes every time – testing only. Use “My domain” for real use.")}</Callout></div>}
 

@@ -1175,7 +1175,11 @@ impl Engine {
         if mode != "lan" && !consent {
             return Err(CoreError::ApprovalRequired(tr!("ติ๊กยืนยันก่อนว่าต้องการเปิดสู่สาธารณะ", "confirm that you want to make this server public")));
         }
-        let token_provider = if mode == "playit" { ProviderId::Playit } else { ProviderId::Cloudflare };
+        let token_provider = match mode {
+            "playit" => ProviderId::Playit,
+            "ngrok" => ProviderId::Ngrok,
+            _ => ProviderId::Cloudflare,
+        };
         if let Some(t) = token.as_deref().filter(|t| !t.trim().is_empty()) {
             self.set_hosting_token(id, token_provider, t)?;
         }
@@ -1209,6 +1213,26 @@ impl Engine {
                     p.hosting.playit_address = Some(a.to_string());
                 }
                 p.hosting.provider = ProviderId::Playit;
+                p.hosting.token_secret = Some(key);
+            }
+            // ngrok: websites over HTTP, games over a TCP endpoint (needs a
+            // payment method on the ngrok account; no UDP at all).
+            "ngrok" => {
+                if matches!(p.protocol, Protocol::Udp | Protocol::TcpUdp) {
+                    return Err(CoreError::InvalidConfig(tr!(
+                        "ngrok ไม่รองรับ UDP (เช่น Minecraft Bedrock) — ใช้ playit.gg แทน",
+                        "ngrok has no UDP tunnels (e.g. Minecraft Bedrock) – use playit.gg instead"
+                    )));
+                }
+                let key = Self::token_key(id, ProviderId::Ngrok);
+                if !self.secrets.has(&key) {
+                    return Err(CoreError::InvalidConfig(tr!(
+                        "วาง Authtoken ของ ngrok ก่อน (dashboard.ngrok.com → Your Authtoken)",
+                        "Paste your ngrok authtoken first (dashboard.ngrok.com → Your Authtoken)"
+                    )));
+                }
+                p.hosting.provider = ProviderId::Ngrok;
+                p.hosting.ngrok_tcp = !p.protocol.is_http_family();
                 p.hosting.token_secret = Some(key);
             }
             "quick" => {

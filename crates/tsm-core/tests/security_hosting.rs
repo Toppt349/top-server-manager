@@ -174,5 +174,15 @@ async fn games_are_never_sent_to_cloudflare_and_playit_needs_a_key() {
     assert!(err.to_string().contains("joinmc.link"), "{err}");
     // consent is still required
     assert!(e.quick_publish(&game.id, "playit", None, None, false, false).await.is_err());
-    assert!(!e.supervisor.is_active(&game.id), "nothing was started");
+
+    // ngrok: TCP games need the authtoken first
+    let err = e.quick_publish(&game.id, "ngrok", None, None, true, false).await.unwrap_err();
+    assert!(err.to_string().to_lowercase().contains("authtoken"), "{err}");
+    // and UDP games (e.g. Bedrock) are refused: ngrok has no UDP
+    let mut bedrock = test_project("Bedrock", folder.path(), free_port(), &[]);
+    bedrock.protocol = Protocol::Udp;
+    let bedrock = e.projects.create(bedrock).unwrap();
+    let err = e.quick_publish(&bedrock.id, "ngrok", Some("fake-ngrok-token-123".into()), None, true, false).await.unwrap_err();
+    assert!(err.to_string().contains("UDP"), "{err}");
+    assert!(!e.supervisor.is_active(&game.id) && !e.supervisor.is_active(&bedrock.id), "nothing was started");
 }
