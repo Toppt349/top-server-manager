@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.1
+
+### English
+- **Fixed: Minecraft and other game servers could not be shared from the Hosting page.** The quick share card only offered Cloudflare Tunnel, which carries websites only, so pressing Go always failed. The card now fits the server:
+  - **Websites:** Cloudflare (temporary link or your own domain), or Home / same Wi-Fi.
+  - **Games and TCP/UDP servers:** playit.gg with step-by-step setup (agent secret key, tunnel type and the local address to use), or Home / same Wi-Fi.
+- Sending a game server to Cloudflare is now refused with a clear message that points to playit.gg.
+- The version in the sidebar now comes from the build instead of being fixed at 2.0.0.
+
+### ภาษาไทย
+- **แก้: แชร์ Minecraft และเกมอื่น ๆ จากหน้าโฮสต์ไม่ได้** การ์ดแชร์เดิมมีแต่ Cloudflare Tunnel ซึ่งใช้ได้เฉพาะเว็บ กดเปิดเลยจึงขึ้นข้อผิดพลาดทุกครั้ง ตอนนี้การ์ดเลือกวิธีให้ตรงกับเซิร์ฟเวอร์:
+  - **เว็บ:** Cloudflare (ลิงก์ชั่วคราวหรือโดเมนของคุณ) หรือในบ้าน / Wi-Fi เดียวกัน
+  - **เกมและเซิร์ฟเวอร์ TCP/UDP:** playit.gg พร้อมขั้นตอนทีละข้อ (Secret key ของ agent, ชนิดของ tunnel และที่อยู่ในเครื่องที่ต้องใส่) หรือในบ้าน / Wi-Fi เดียวกัน
+- ถ้าพยายามส่งเกมไปที่ Cloudflare แอปจะปฏิเสธและบอกให้ใช้ playit.gg แทน
+- เลขเวอร์ชันที่มุมซ้ายล่างอ่านจากตัว build แล้ว ไม่ได้ฝังไว้เป็น 2.0.0
+
 ## 2.0.0 – first public release
 
 ### English

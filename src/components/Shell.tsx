@@ -59,7 +59,7 @@ export function Sidebar() {
         </div>
       ))}
       <div className="foot">
-        <div className="row"><Cpu size={13} /> v2.0.0 · Rust + Tauri 2</div>
+        <div className="row"><Cpu size={13} /> v{__APP_VERSION__} · Rust + Tauri 2</div>
       </div>
     </nav>
   );

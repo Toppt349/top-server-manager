@@ -1175,12 +1175,42 @@ impl Engine {
         if mode != "lan" && !consent {
             return Err(CoreError::ApprovalRequired(tr!("ติ๊กยืนยันก่อนว่าต้องการเปิดสู่สาธารณะ", "confirm that you want to make this server public")));
         }
+        let token_provider = if mode == "playit" { ProviderId::Playit } else { ProviderId::Cloudflare };
         if let Some(t) = token.as_deref().filter(|t| !t.trim().is_empty()) {
-            self.set_hosting_token(id, ProviderId::Cloudflare, t)?;
+            self.set_hosting_token(id, token_provider, t)?;
         }
         let mut p = self.projects.get(id)?;
+        if matches!(mode, "quick" | "domain") && !p.protocol.is_http_family() {
+            return Err(CoreError::InvalidConfig(tr!(
+                "Cloudflare Tunnel ส่งต่อได้เฉพาะเว็บ — เกมและเซิร์ฟเวอร์ TCP/UDP ให้เลือก playit.gg หรือ “ในบ้าน / Wi-Fi เดียวกัน”",
+                "Cloudflare Tunnel only carries websites – for games and TCP/UDP servers choose playit.gg or “Home / same Wi-Fi”"
+            )));
+        }
         let mut needs_restart = false;
         match mode {
+            // Games and other raw TCP/UDP servers: playit.gg agent. `hostname`
+            // carries the optional address playit assigned (e.g.
+            // name.gl.joinmc.link); without it the agent output is used.
+            "playit" => {
+                let key = Self::token_key(id, ProviderId::Playit);
+                if !self.secrets.has(&key) {
+                    return Err(CoreError::InvalidConfig(tr!(
+                        "วางรหัสลับ agent ของ playit.gg ก่อน (playit.gg → Agents → Add agent)",
+                        "Paste the playit.gg agent secret key first (playit.gg → Agents → Add agent)"
+                    )));
+                }
+                if let Some(a) = hostname.as_deref().map(str::trim).filter(|a| !a.is_empty()) {
+                    if a.contains(' ') || a.contains('/') || a.len() > 253 {
+                        return Err(CoreError::InvalidConfig(tr!(
+                            "ที่อยู่จาก playit.gg ต้องเป็นแบบ name.gl.joinmc.link หรือ host.ply.gg:12345",
+                            "The playit address must look like name.gl.joinmc.link or host.ply.gg:12345"
+                        )));
+                    }
+                    p.hosting.playit_address = Some(a.to_string());
+                }
+                p.hosting.provider = ProviderId::Playit;
+                p.hosting.token_secret = Some(key);
+            }
             "quick" => {
                 p.hosting.provider = ProviderId::Cloudflare;
                 p.hosting.cloudflare_mode = CloudflareMode::Quick;

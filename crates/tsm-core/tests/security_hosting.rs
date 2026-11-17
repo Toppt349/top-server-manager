@@ -153,3 +153,26 @@ async fn provider_protocol_rules() {
     t.project.hosting.exposure_consent = false;
     assert!(common_validation(&t, &capabilities(ProviderId::Local)).is_empty());
 }
+
+#[tokio::test]
+async fn games_are_never_sent_to_cloudflare_and_playit_needs_a_key() {
+    let root = tempfile::tempdir().unwrap();
+    let folder = tempfile::tempdir().unwrap();
+    let e = engine(root.path()).await;
+    let mut game = test_project("Game", folder.path(), free_port(), &[]);
+    game.protocol = Protocol::Tcp;
+    let game = e.projects.create(game).unwrap();
+
+    for mode in ["quick", "domain"] {
+        let err = e.quick_publish(&game.id, mode, None, Some("mc.example.com".into()), true, false).await.unwrap_err();
+        assert!(err.to_string().contains("playit"), "{mode}: {err}");
+    }
+    let err = e.quick_publish(&game.id, "playit", None, None, true, false).await.unwrap_err();
+    assert!(err.to_string().to_lowercase().contains("secret"), "{err}");
+    // a bad address is refused before anything starts
+    let err = e.quick_publish(&game.id, "playit", Some("agent-secret-123456".into()), Some("not an address/x".into()), true, false).await.unwrap_err();
+    assert!(err.to_string().contains("joinmc.link"), "{err}");
+    // consent is still required
+    assert!(e.quick_publish(&game.id, "playit", None, None, false, false).await.is_err());
+    assert!(!e.supervisor.is_active(&game.id), "nothing was started");
+}

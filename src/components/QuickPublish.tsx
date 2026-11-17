@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Cloud, Copy, ExternalLink, Globe2, Home, Loader2, Rocket, Square, Zap } from "lucide-react";
+import { CheckCircle2, Cloud, Copy, ExternalLink, Gamepad2, Globe2, Home, Loader2, Rocket, Square, Zap } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useStore } from "../lib/store";
 import { L, tm, useT } from "../lib/i18n";
 import type { Project } from "../lib/types";
-import { localUrl } from "../lib/format";
+import { isWeb, localUrl } from "../lib/format";
 import { AutostartSwitch, Callout, copyText, Field, HostingBadge } from "./ui";
 
-type Mode = "quick" | "domain" | "lan";
+type Mode = "quick" | "domain" | "lan" | "playit";
 
 export default function QuickPublish({ project }: { project: Project }) {
   useT();
@@ -15,26 +15,40 @@ export default function QuickPublish({ project }: { project: Project }) {
   const st = useStore((s) => s.states[project.id]);
   const refresh = useStore((s) => s.refresh);
   const toast = useStore((s) => s.toast);
-  const [mode, setMode] = useState<Mode>(project.hosting.provider === "lan" ? "lan" : project.hosting.cloudflare_mode === "token" && project.hosting.hostname ? "domain" : "quick");
+  // Cloudflare Tunnel only carries HTTP: games and raw TCP/UDP servers get playit.gg instead.
+  const web = isWeb(project.protocol);
+  const initial: Mode = project.hosting.provider === "lan" ? "lan"
+    : !web ? "playit"
+    : project.hosting.cloudflare_mode === "token" && project.hosting.hostname ? "domain" : "quick";
+  const [mode, setMode] = useState<Mode>(initial);
   const [token, setToken] = useState("");
   const [tokenSaved, setTokenSaved] = useState(false);
-  const [hostname, setHostname] = useState(project.hosting.hostname ?? "");
+  const [hostname, setHostname] = useState(web ? project.hosting.hostname ?? "" : project.hosting.playit_address ?? "");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { api.cloudflareOverview().then((o) => setTokenSaved(o.token_saved)).catch(() => {}); }, [project.id]);
+  useEffect(() => {
+    if (web) api.cloudflareOverview().then((o) => setTokenSaved(o.token_saved)).catch(() => {});
+    else api.secretExists(`hosting.${project.id}.playit`).then(setTokenSaved).catch(() => {});
+  }, [project.id, web]);
 
-  const MODES: { id: Mode; icon: JSX.Element; title: string; sub: string; who: string }[] = [
+  const lanMode = { id: "lan" as Mode, icon: <Home />, title: L("เฉพาะในบ้าน / Wi-Fi เดียวกัน", "Home / same Wi-Fi only"), sub: L("เครื่องอื่นในวงแลนเข้าได้ ไม่ออกอินเทอร์เน็ต", "Other devices on your network, not the internet"), who: L("เหมาะกับ: บ้าน / ห้องเรียน / ออฟฟิศ", "For: home, classroom, office") };
+  const MODES: { id: Mode; icon: JSX.Element; title: string; sub: string; who: string }[] = web ? [
     { id: "quick", icon: <Zap />, title: L("ลิงก์ชั่วคราว (ลองเลย)", "Temporary link (try now)"), sub: L("ไม่ต้องมีบัญชี ได้ลิงก์ https://….trycloudflare.com ทันที", "No account needed – instant https://….trycloudflare.com"), who: L("เหมาะกับ: ทดสอบ / ให้เพื่อนลองแป๊บเดียว", "For: quick tests") },
-    { id: "domain", icon: <Cloud />, title: L("โดเมนของฉัน (ถาวร)", "My domain (permanent)"), sub: L("เช่น https://shop.example.com ผ่าน Cloudflare Tunnel", "e.g. https://drive.example.com via Cloudflare Tunnel"), who: L("เหมาะกับ: ใช้งานจริง ลิงก์ไม่เปลี่ยน", "For: real use, fixed link") },
-    { id: "lan", icon: <Home />, title: L("เฉพาะในบ้าน / Wi-Fi เดียวกัน", "Home / same Wi-Fi only"), sub: L("เครื่องอื่นในวงแลนเข้าได้ ไม่ออกอินเทอร์เน็ต", "Other devices on your network, not the internet"), who: L("เหมาะกับ: บ้าน / ห้องเรียน / ออฟฟิศ", "For: home, classroom, office") },
+    { id: "domain", icon: <Cloud />, title: L("โดเมนของฉัน (ถาวร)", "My domain (permanent)"), sub: L("เช่น https://shop.example.com ผ่าน Cloudflare Tunnel", "e.g. https://shop.example.com via Cloudflare Tunnel"), who: L("เหมาะกับ: ใช้งานจริง ลิงก์ไม่เปลี่ยน", "For: real use, fixed link") },
+    lanMode,
+  ] : [
+    { id: "playit", icon: <Gamepad2 />, title: L("เพื่อนต่างบ้าน — playit.gg (แนะนำ)", "Friends anywhere – playit.gg (recommended)"), sub: L("ฟรี ไม่ต้องตั้งเราเตอร์ ไม่เปิดเผย IP บ้าน ได้ที่อยู่แบบ ชื่อ.joinmc.link", "Free, no router setup, hides your home IP – you get an address like name.joinmc.link"), who: L("เหมาะกับ: Minecraft / เกม เล่นกับเพื่อนผ่านอินเทอร์เน็ต", "For: Minecraft and games over the internet") },
+    lanMode,
   ];
 
   const active = h && h.status !== "disabled";
   const addr = h?.public_address ?? h?.extra_addresses[0] ?? null;
   const online = h?.status === "public_online" || h?.status === "private_only";
   const needsConsent = mode !== "lan";
-  const canGo = !busy && (!needsConsent || consent) && (mode !== "domain" || (hostname.trim() && (token.trim() || tokenSaved)));
+  const canGo = !busy && (!needsConsent || consent)
+    && (mode !== "domain" || (hostname.trim() && (token.trim() || tokenSaved)))
+    && (mode !== "playit" || token.trim() || tokenSaved);
 
   const go = async () => {
     setBusy(true);
@@ -63,7 +77,7 @@ export default function QuickPublish({ project }: { project: Project }) {
         {!online && h!.status !== "error" && <p className="muted">{h!.message ? tm(h!.message) : L("กำลังตรวจสอบว่าเข้าจากภายนอกได้จริง…", "Verifying external access…")}</p>}
         {h!.status === "error" && <Callout kind="err">{tm(h!.message)}</Callout>}
         {online && <Callout kind="ok"><b>{L("ใช้งานได้แล้ว", "It works")}</b> — {L("ส่งลิงก์นี้ให้คนอื่นได้เลย", "share this link")}{h!.verification ? <div className="dim">{tm(h!.verification)}</div> : null}</Callout>}
-        {h!.status === "public_online" && <p className="dim mt">{L("คำแนะนำ: ตั้งรหัสผ่านผู้ดูแลเว็บให้แข็งแรง และถ้าเว็บมีหน้าแอดมิน ใช้ Cloudflare Access (Zero Trust → Access → Applications) ล็อกหน้า /admin ให้เข้าได้เฉพาะอีเมลของคุณ", "Tip: use a strong admin password, and protect admin pages with Cloudflare Access (Zero Trust → Access → Applications).")}</p>}
+        {h!.status === "public_online" && web && <p className="dim mt">{L("คำแนะนำ: ตั้งรหัสผ่านผู้ดูแลเว็บให้แข็งแรง และถ้าเว็บมีหน้าแอดมิน ใช้ Cloudflare Access (Zero Trust → Access → Applications) ล็อกหน้า /admin ให้เข้าได้เฉพาะอีเมลของคุณ", "Tip: use a strong admin password, and protect admin pages with Cloudflare Access (Zero Trust → Access → Applications).")}</p>}
         <div className="row wrap mt">
           {addr && <button className="btn primary" onClick={() => copyText(addr)}><Copy /> {L("คัดลอกลิงก์", "Copy link")}</button>}
           {addr && addr.startsWith("http") && <button className="btn" onClick={() => api.openUrl(addr)}><ExternalLink /> {L("เปิดดู", "Open")}</button>}
@@ -112,13 +126,39 @@ export default function QuickPublish({ project }: { project: Project }) {
           </div>
         </div>
       )}
+      {mode === "playit" && (
+        <div className="grid g2 mt">
+          <div>
+            <b>{L("ทำครั้งแรกครั้งเดียวที่ playit.gg (ฟรี)", "One-time setup on playit.gg (free)")}</b>
+            <ol className="muted" style={{ paddingLeft: 20, lineHeight: 1.8, margin: "6px 0" }}>
+              <li>{L("สมัคร / เข้าสู่ระบบ playit.gg", "Sign up / sign in at playit.gg")}</li>
+              {!tokenSaved && <li>{L("Agents → Add agent → คัดลอก Secret key มาวางในช่องขวา", "Agents → Add agent → copy the Secret key into the box")}</li>}
+              <li>{L("Tunnels → Add tunnel → เลือก ", "Tunnels → Add tunnel → type ")}<b>{project.kind === "minecraft_bedrock" ? "Minecraft Bedrock" : project.kind === "minecraft_java" ? "Minecraft Java" : project.protocol === "udp" ? "UDP" : "TCP"}</b>{L(" · Local address ", " · local address ")}<b className="mono">127.0.0.1:{project.port}</b></li>
+              <li>{L("คัดลอกที่อยู่ที่ playit ให้มา (เช่น ชื่อ.gl.joinmc.link) มาวางในช่องขวา แล้วส่งให้เพื่อน", "Copy the address playit gives you (e.g. name.gl.joinmc.link) into the box and send it to your friends")}</li>
+            </ol>
+            <button className="btn sm" onClick={() => api.openUrl("https://playit.gg/account/agents")}><ExternalLink /> {L("เปิด playit.gg", "Open playit.gg")}</button>
+          </div>
+          <div className="grid" style={{ gap: 12 }}>
+            {!tokenSaved && (
+              <Field label={L("Secret key ของ agent", "Agent secret key")} hint={L("เก็บแบบเข้ารหัส ไม่แสดงกลับ", "Stored encrypted, never shown again")}>
+                <input className="input" type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="playit secret key" />
+              </Field>
+            )}
+            {tokenSaved && <div className="badge ok" style={{ alignSelf: "start" }}><CheckCircle2 size={13} /> {L("ใช้ secret key ที่บันทึกไว้แล้ว", "Using the saved secret key")}</div>}
+            <Field label={L("ที่อยู่จาก playit.gg (ถ้ามี)", "Address from playit.gg (optional)")} hint={L("เว้นว่างได้ — โปรแกรมจะอ่านจาก agent เอง", "Can be empty – the app reads it from the agent")}>
+              <input className="input" value={hostname} onChange={(e) => setHostname(e.target.value)} placeholder="name.gl.joinmc.link" />
+            </Field>
+          </div>
+        </div>
+      )}
+      {!web && <p className="dim mt">{L("วิธีอื่น (Direct IP / เปิดพอร์ตเราเตอร์, FRP, ngrok, Tailscale) อยู่ใน “ตั้งค่าขั้นสูง” ด้านล่าง · Cloudflare Tunnel ใช้กับเกมไม่ได้", "Other ways (Direct IP / port forwarding, FRP, ngrok, Tailscale) are under “Advanced” below · Cloudflare Tunnel does not work for games")}</p>}
       {mode === "lan" && <div className="mt"><Callout kind="info">{L("โปรแกรมจะตั้งให้รับการเชื่อมต่อจากวงแลน (รีสตาร์ทให้เอง) และเพิ่มกฎ Firewall เฉพาะเครือข่าย Private — Windows จะถามสิทธิ์ ให้กด Yes", "The server will listen on your LAN (auto restart) and a Private-network firewall rule is added – Windows will ask for permission, press Yes")}</Callout></div>}
       {mode === "quick" && <div className="mt"><Callout kind="info">{L("ลิงก์จะเปลี่ยนใหม่ทุกครั้งที่เปิด — ใช้ทดสอบเท่านั้น ถ้าจะใช้จริงให้เลือก “โดเมนของฉัน”", "The link changes every time – testing only. Use “My domain” for real use.")}</Callout></div>}
 
       {needsConsent && (
         <label className="check mt">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          <span>{L("ฉันเข้าใจว่า ", "I understand that ")}<b>{L("ทุกคนที่มีลิงก์จะเข้าเว็บนี้ได้", "anyone with the link can open this site")}</b>{L(" (ฐานข้อมูลและตัวโปรแกรมจะไม่ถูกเปิดออกไป)", " (the database and this app are never exposed)")}</span>
+          <span>{L("ฉันเข้าใจว่า ", "I understand that ")}<b>{web ? L("ทุกคนที่มีลิงก์จะเข้าเว็บนี้ได้", "anyone with the link can open this site") : L("ทุกคนที่มีที่อยู่นี้จะเข้าเซิร์ฟเวอร์ได้", "anyone with the address can join this server")}</b>{L(" (ฐานข้อมูลและตัวโปรแกรมจะไม่ถูกเปิดออกไป)", " (the database and this app are never exposed)")}{!web && L(" — ถ้าไม่อยากให้คนแปลกหน้าเข้า เปิด whitelist ใน server.properties", " – turn on the whitelist in server.properties to keep strangers out")}</span>
         </label>
       )}
       {error && <div className="mt"><Callout kind="err">{error}</Callout></div>}
